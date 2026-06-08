@@ -51,8 +51,9 @@ cd c:\AI_pom\support-agent
 |-----|------------|
 | http://127.0.0.1:8000/docs | Swagger API |
 | http://127.0.0.1:8000/health | Статус системы |
-| http://127.0.0.1:8000/widget/?customer_id=cust_456&api_key=staging-key-cust456 | Чат-виджет |
-| http://127.0.0.1:8000/widget/?customer_id=cust_456&api_key=staging-key-cust456&transport=ws | WebSocket |
+| http://127.0.0.1:8000/widget/?customer_id=cust_456 | Чат-виджет (ключ подставляется автоматически в staging) |
+| http://127.0.0.1:8000/widget/?customer_id=cust_456&transport=ws | WebSocket |
+| С явным ключом | `...&api_key=staging-key-cust456` |
 | http://127.0.0.1:8000/admin-ui/ | Admin (ключ ниже) |
 | http://127.0.0.1:8000/metrics | Prometheus |
 

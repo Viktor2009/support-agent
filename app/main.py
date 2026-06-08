@@ -1,3 +1,4 @@
+import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -69,6 +70,17 @@ app.add_middleware(
 )
 
 _root = Path(__file__).resolve().parent.parent
+
+
+@app.get("/widget/config.js")
+async def widget_config_js():
+    """Inject staging API key for widget when WIDGET_EMBED_API_KEY is set."""
+    return Response(
+        content=f"window.__SUPPORT_API_KEY__ = {json.dumps(settings.widget_embed_api_key)};",
+        media_type="application/javascript",
+    )
+
+
 for mount_path, folder in (("/widget", "widget"), ("/admin-ui", "admin")):
     directory = _root / folder
     if directory.exists():

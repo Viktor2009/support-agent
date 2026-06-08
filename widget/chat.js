@@ -1,7 +1,10 @@
 const API_BASE = window.location.origin;
 const SESSION_KEY = "support_agent_session_id";
 const CUSTOMER_ID = new URLSearchParams(window.location.search).get("customer_id") || "cust_456";
-const API_KEY = new URLSearchParams(window.location.search).get("api_key") || "";
+const API_KEY =
+  new URLSearchParams(window.location.search).get("api_key") ||
+  window.__SUPPORT_API_KEY__ ||
+  "";
 const TRANSPORT = new URLSearchParams(window.location.search).get("transport") || "sse";
 const USE_STREAMING = new URLSearchParams(window.location.search).get("stream") !== "0";
 
@@ -90,7 +93,12 @@ async function sendMessageStream(text) {
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    if (response.status === 401) {
+      throw new Error(
+        "Нужен API key: добавьте ?api_key=ваш-ключ в адрес виджета"
+      );
+    }
+    throw new Error(`Ошибка сервера (HTTP ${response.status})`);
   }
 
   const reader = response.body.getReader();
@@ -158,6 +166,15 @@ async function sendMessageClassic(text) {
     body: JSON.stringify(chatPayload(text)),
   });
 
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error(
+        "Нужен API key: добавьте ?api_key=ваш-ключ в адрес виджета"
+      );
+    }
+    throw new Error(`Ошибка сервера (HTTP ${response.status})`);
+  }
+
   const data = await response.json();
 
   if (data.status === "awaiting_operator") {
@@ -183,7 +200,10 @@ async function sendMessage(text) {
       await sendMessageClassic(text);
     }
   } catch (err) {
-    addMessage("Ошибка соединения с сервером.", "system");
+    const text =
+      err && err.message ? err.message : "Ошибка соединения с сервером.";
+    addMessage(text, "system");
+    console.error("chat error:", err);
   } finally {
     input.disabled = false;
     input.focus();

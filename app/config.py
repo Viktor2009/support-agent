@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Optional plugin module, e.g. plugins.example_promo
     plugin_module: str = ""
 
+    # Staging/dev: auto-inject API key into widget (empty = require ?api_key=)
+    widget_embed_api_key: str = ""
+
     # RAG: auto | keyword | embedding
     rag_mode: str = "auto"
     rag_use_mock_embeddings: bool = True

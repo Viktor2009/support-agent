@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres", "staging", "eval", "loadtest")]
+    [ValidateSet("install", "test", "lint", "coverage", "run", "migrate", "postgres", "staging", "eval", "loadtest")]
     [string]$Task = "run"
 )
 
@@ -16,6 +16,10 @@ switch ($Task) {
     "test" {
         $env:MOCK_LLM = "true"
         .\.venv\Scripts\python.exe -m pytest -v
+    }
+    "coverage" {
+        $env:MOCK_LLM = "true"
+        .\.venv\Scripts\python.exe -m pytest -v --cov=app --cov-report=term-missing --cov-fail-under=80
     }
     "lint" {
         .\.venv\Scripts\ruff.exe check app tests

@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: 0.7.0
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.0.0**
 
 ## Цели
 
@@ -122,12 +122,12 @@
 - [x] Operator onboarding (`docs/OPERATOR.md`)
 - [x] Security checklist (`docs/SECURITY.md`)
 
-## Definition of Done — Production v1.0
+## Definition of Done — Production v1.0 `[DONE]`
 
 1. Все Must have (Фаза 0–2) выполнены
-2. ≥30 автотестов, coverage критических путей ≥80%
-3. Load test: 50 concurrent sessions
-4. Runbook: деплой, откат, LLM down
-5. Golden dataset eval проходит пороги
+2. ≥30 автотестов, coverage критических путей ≥80% — **68 tests, 86% app coverage**
+3. Load test: 50 concurrent sessions — **CI job `loadtest` + `scripts/load_test.py`**
+4. Runbook: деплой, откат, LLM down — **`docs/RUNBOOK.md`**
+5. Golden dataset eval проходит пороги — **CI step + `dev.ps1 -Task eval`**
 6. Security review пройден — см. [docs/SECURITY.md](SECURITY.md)
 7. Документация API + onboarding оператора — см. [docs/OPERATOR.md](OPERATOR.md)

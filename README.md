@@ -163,6 +163,7 @@ ruff check app tests
 
 ```powershell
 .\scripts\dev.ps1 -Task test
+.\scripts\dev.ps1 -Task coverage   # pytest + ≥80% coverage gate
 .\scripts\dev.ps1 -Task lint
 ```
 

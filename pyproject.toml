@@ -21,3 +21,12 @@ select = ["E", "F", "I", "UP"]
 "app/schemas.py" = ["UP045"]
 "app/graph/state.py" = ["UP045"]
 "tests/eval/run_eval.py" = ["E402"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_empty = true

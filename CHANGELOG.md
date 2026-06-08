@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-06-08 — Production v1.0
+
+### Added
+- CI coverage gate (`--cov-fail-under=80`, currently ~86% on `app/`)
+- CI load test job: 50 concurrent `/chat` sessions against live uvicorn
+- CI golden dataset eval step
+- `.\scripts\dev.ps1 -Task coverage`
+- In-process concurrent chat smoke test (10 parallel)
+- 1 new test — 68 total
+
 ## [0.7.0] — 2026-06-08
 
 ### Added

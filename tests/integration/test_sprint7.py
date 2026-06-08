@@ -3,7 +3,7 @@ def test_health_includes_async_database(client):
     assert response.status_code == 200
     data = response.json()
     assert data["database_async"] == "ok"
-    assert data["version"] == "1.4.1"
+    assert data["version"] == "1.5.0"
 
 
 def test_security_headers(client):

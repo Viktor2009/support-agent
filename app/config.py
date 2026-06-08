@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "1.4.1"
+    app_version: str = "1.5.0"
 
     # RAG: auto | keyword | embedding
     rag_mode: str = "auto"

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-06-08 — Phase 6: full async API
+
+### Added
+- `async_admin.py`, `async_gdpr.py` — async DB for admin, GDPR, feedback, demo
+- CI `staging` job: docker compose + smoke test
+- `docs/TLS.md` — nginx TLS termination guide
+- 3 unit tests for async admin/GDPR — 88 total
+
+### Changed
+- Admin, GDPR, `/chat/feedback`, `/demo/*` use async SQLAlchemy (no threadpool)
+
+### Removed
+- `app/executor.py` (`run_sync`) — no longer needed
+
 ## [1.4.1] — 2026-06-08
 
 ### Fixed

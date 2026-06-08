@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.async_gdpr import adelete_session_data, aexport_session_data
 from app.auth import AuthContext, get_auth_context, resolve_customer_id, resolve_tenant_id
-from app.executor import run_sync
-from app.gdpr import delete_session_data, export_session_data
 from app.privacy import mask_payload
 
 router = APIRouter(prefix="/gdpr", tags=["gdpr"])
@@ -18,8 +17,7 @@ async def export_session(
     tenant_id = resolve_tenant_id(auth)
     resolved_customer = resolve_customer_id(auth, customer_id)
     try:
-        payload = await run_sync(
-            export_session_data,
+        payload = await aexport_session_data(
             session_id,
             tenant_id=tenant_id,
             customer_id=resolved_customer,
@@ -43,8 +41,7 @@ async def delete_session(
     tenant_id = resolve_tenant_id(auth)
     resolved_customer = resolve_customer_id(auth, customer_id)
     try:
-        await run_sync(
-            delete_session_data,
+        await adelete_session_data(
             session_id,
             tenant_id=tenant_id,
             customer_id=resolved_customer,

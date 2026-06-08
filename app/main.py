@@ -7,19 +7,18 @@ from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.admin_routes import router as admin_router
+from app.async_admin import asave_feedback
 from app.async_database import dispose_async_db, init_async_db
+from app.async_queries import (
+    aget_account_info,
+    aget_order_status,
+    alist_customer_orders,
+)
 from app.auth import AuthContext, get_auth_context, resolve_customer_id, resolve_tenant_id
 from app.cache import init_cache, shutdown_cache
 from app.checkpointer import init_checkpointer, shutdown_checkpointer
 from app.config import parse_cors_origins, settings
-from app.database import (
-    get_account_info,
-    get_order_status,
-    init_db,
-    list_customer_orders,
-    save_feedback,
-)
-from app.executor import run_sync
+from app.database import init_db
 from app.gdpr_routes import router as gdpr_router
 from app.health import build_health_payload
 from app.metrics import MetricsMiddleware, metrics_content_type, metrics_payload
@@ -147,8 +146,7 @@ async def chat_feedback(
 ):
     customer_id = resolve_customer_id(auth, request.customer_id)
     tenant_id = resolve_tenant_id(auth, request.tenant_id)
-    result = await run_sync(
-        save_feedback,
+    result = await asave_feedback(
         session_id=request.session_id,
         rating=request.rating,
         customer_id=customer_id,
@@ -169,12 +167,7 @@ async def demo_order(
         tenant_id = auth.tenant_id
     else:
         tenant_id = "default"
-    data = await run_sync(
-        get_order_status,
-        order_id,
-        customer_id,
-        tenant_id=tenant_id,
-    )
+    data = await aget_order_status(order_id, customer_id, tenant_id=tenant_id)
     if not data:
         raise HTTPException(status_code=404, detail="Order not found")
     return data
@@ -190,8 +183,8 @@ async def demo_customer(
         tenant_id = auth.tenant_id
     else:
         tenant_id = "default"
-    data = await run_sync(get_account_info, customer_id, tenant_id=tenant_id)
+    data = await aget_account_info(customer_id, tenant_id=tenant_id)
     if not data:
         raise HTTPException(status_code=404, detail="Customer not found")
-    orders = await run_sync(list_customer_orders, customer_id, tenant_id=tenant_id)
+    orders = await alist_customer_orders(customer_id, tenant_id=tenant_id)
     return {"customer": data, "orders": orders}

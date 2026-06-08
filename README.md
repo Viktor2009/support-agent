@@ -93,13 +93,14 @@ GET /metrics   # Prometheus format (METRICS_ENABLED=true)
 
 Runbook: [docs/RUNBOOK.md](docs/RUNBOOK.md)  
 Operator guide: [docs/OPERATOR.md](docs/OPERATOR.md)  
-Security checklist: [docs/SECURITY.md](docs/SECURITY.md)
+Security checklist: [docs/SECURITY.md](docs/SECURITY.md)  
+TLS / nginx: [docs/TLS.md](docs/TLS.md)
 
-## Async API (v1.3.0)
+## Async API (v1.5.0)
 
-Все эндпоинты — `async def`. LangGraph (`ainvoke` / `astream`) и DB-узлы графа — async SQLAlchemy (`aiosqlite` / `asyncpg`).  
-Admin, GDPR и demo-эндпоинты по-прежнему используют sync ORM через threadpool.  
-`/health` возвращает `database_async` (asyncpg / aiosqlite).
+Все эндпоинты — `async def` + async SQLAlchemy (`aiosqlite` / `asyncpg`).  
+LangGraph: `ainvoke` / `astream`, async checkpointer на Postgres.  
+`/health` → `database_async` (asyncpg / aiosqlite).
 
 ## Новые intents (v0.3.0)
 

@@ -101,3 +101,34 @@ jobs:
       - name: Stop server
         if: always()
         run: kill "$(cat server.pid)" 2>/dev/null || true
+
+  staging:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start staging stack
+        run: docker compose -f docker-compose.staging.yml up --build -d
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8000/health && exit 0
+            sleep 2
+          done
+          docker compose -f docker-compose.staging.yml logs app
+          exit 1
+
+      - name: Smoke test
+        run: |
+          python -m pip install --upgrade pip httpx
+          python scripts/smoke_test.py \
+            --url http://127.0.0.1:8000 \
+            --api-key staging-key-cust456 \
+            --admin-key staging-admin-key
+
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker-compose.staging.yml down -v

@@ -11,7 +11,7 @@
 
 - [x] Security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, …)
 - [x] `X-Request-ID` для трассировки
-- [ ] TLS termination на reverse proxy (nginx / ALB)
+- [ ] TLS termination на reverse proxy (nginx / ALB) — см. [TLS.md](TLS.md)
 - [ ] Rate limiting: `RATE_LIMIT_PER_MINUTE` > 0
 
 ## Data

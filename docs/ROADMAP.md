@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.4.0**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.5.0**
 
 ## Цели
 
@@ -172,15 +172,21 @@
 - [x] `pip audit` в CI
 - [x] `.env.staging.example` + hardening в `docker-compose.staging.yml`
 - [x] Security checklist: staging profile
-- [ ] Staging smoke в CI (docker compose job)
-- [ ] Async admin / GDPR endpoints (убрать threadpool)
+- [x] Staging smoke в CI (docker compose job)
+- [x] Async admin / GDPR / demo / feedback (без threadpool)
+- [x] TLS termination guide (`docs/TLS.md`)
 - [ ] Redis session store (вместо Postgres-only dialog memory)
 - [ ] WebSocket streaming для chat widget
-- [ ] TLS termination guide (nginx / reverse proxy)
 
-## Sprint 11 — в работе (Production Hardening)
+## Sprint 11 — завершён (Production Hardening)
 
 - [x] Фаза 6 roadmap + smoke test script
 - [x] Dependabot + pip audit
 - [x] Staging env template + security checklist update
-- [x] Smoke test verified (local staging env; full Docker — `dev.ps1 -Task staging`)
+- [x] Smoke test verified (local + Docker staging)
+
+## Sprint 12 — завершён (Async platform + CI staging)
+
+- [x] `async_admin.py`, `async_gdpr.py` — admin, GDPR, feedback, demo без `run_sync`
+- [x] CI job `staging`: docker compose + smoke test
+- [x] `docs/TLS.md` — nginx reverse proxy

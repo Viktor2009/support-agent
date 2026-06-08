@@ -39,6 +39,11 @@ jobs:
         env:
           MOCK_LLM: "true"
 
+      - name: A/B intent eval
+        run: python tests/eval/run_ab_eval.py --no-langfuse
+        env:
+          MOCK_LLM: "true"
+
   audit:
     runs-on: ubuntu-latest
 

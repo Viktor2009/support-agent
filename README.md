@@ -58,6 +58,8 @@ curl -X POST http://127.0.0.1:8000/chat/feedback `
 ```powershell
 .\scripts\dev.ps1 -Task eval        # mock LLM (CI)
 .\scripts\dev.ps1 -Task eval-real   # OpenAI, если OPENAI_API_KEY задан
+.\scripts\dev.ps1 -Task ab-eval     # A/B prompt variants (без Langfuse)
+.\scripts\dev.ps1 -Task ab-eval-langfuse
 ```
 
 ## Chat widget
@@ -105,7 +107,10 @@ GET /metrics   # Prometheus format (METRICS_ENABLED=true)
 Runbook: [docs/RUNBOOK.md](docs/RUNBOOK.md)  
 Operator guide: [docs/OPERATOR.md](docs/OPERATOR.md)  
 Security checklist: [docs/SECURITY.md](docs/SECURITY.md)  
-TLS / nginx: [docs/TLS.md](docs/TLS.md)
+TLS / nginx: [docs/TLS.md](docs/TLS.md)  
+Langfuse A/B eval: [docs/LANGFUSE.md](docs/LANGFUSE.md)  
+Plugin SDK: [docs/PLUGIN_SDK.md](docs/PLUGIN_SDK.md)  
+Pilot guide: [docs/PILOT.md](docs/PILOT.md)
 
 ## Async API (v1.5.0)
 

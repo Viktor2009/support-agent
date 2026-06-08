@@ -20,7 +20,13 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "1.6.0"
+    app_version: str = "1.7.0"
+
+    # Eval A/B: prompt variant a | b (classify_intent vs classify_intent_b)
+    eval_prompt_variant: str = "a"
+
+    # Optional plugin module, e.g. plugins.example_promo
+    plugin_module: str = ""
 
     # RAG: auto | keyword | embedding
     rag_mode: str = "auto"

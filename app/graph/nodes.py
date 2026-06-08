@@ -137,8 +137,13 @@ def classify_intent(state: SupportState) -> dict:
         result = _mock_classify(last_msg)
     else:
         llm = _get_llm()
+        prompt_key = (
+            "classify_intent_b"
+            if settings.eval_prompt_variant == "b"
+            else "classify_intent"
+        )
         prompt = get_prompt(
-            "classify_intent",
+            prompt_key,
             dialog_summary=summary,
             message=last_msg,
         )

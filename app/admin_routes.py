@@ -6,6 +6,7 @@ from app.async_admin import (
     alist_feedback,
     alist_sessions,
 )
+from app.tools.registry import list_tools
 
 router = APIRouter(prefix="/admin/api", tags=["admin"])
 
@@ -41,3 +42,8 @@ async def admin_feedback(
 ):
     feedback = await alist_feedback(limit=limit)
     return {"feedback": feedback}
+
+
+@router.get("/tools")
+async def admin_tools(_: None = Depends(require_admin)):
+    return {"tools": list_tools()}

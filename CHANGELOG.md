@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-06-08 — Langfuse A/B, Plugin SDK, Pilot
+
+### Added
+- A/B intent eval: `evaluate_intent_dataset`, `run_ab_eval.py`, Langfuse score export
+- Prompt variant `classify_intent_b`; config `EVAL_PROMPT_VARIANT`
+- Plugin SDK: `PLUGIN_MODULE`, `plugins/example_promo.py`, `GET /admin/api/tools`
+- Docs: `LANGFUSE.md`, `PLUGIN_SDK.md`, `PILOT.md`
+- `dev.ps1 -Task ab-eval`, `ab-eval-langfuse`
+- 5 new tests — 98 total
+
 ## [1.6.0] — 2026-06-08 — Phase 6 complete + Phase 7 Intelligence
 
 ### Added

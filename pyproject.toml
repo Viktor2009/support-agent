@@ -1,6 +1,6 @@
 [project]
 name = "support-agent"
-version = "1.6.0"
+version = "1.7.0"
 description = "FastAPI + LangGraph support agent"
 requires-python = ">=3.11"
 
@@ -21,6 +21,7 @@ select = ["E", "F", "I", "UP"]
 "app/schemas.py" = ["UP045"]
 "app/graph/state.py" = ["UP045"]
 "tests/eval/run_eval.py" = ["E402"]
+"tests/eval/run_ab_eval.py" = ["E402"]
 
 [tool.coverage.run]
 source = ["app"]

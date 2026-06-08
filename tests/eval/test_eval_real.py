@@ -1,8 +1,8 @@
-from tests.eval.run_eval import run_eval
+from app.eval_intent import evaluate_intent_dataset
 
 
 def test_real_llm_eval_skips_without_api_key(monkeypatch):
-    monkeypatch.setattr("tests.eval.run_eval.settings.openai_api_key", "")
-    report = run_eval(use_real_llm=True)
+    monkeypatch.setattr("app.eval_intent.settings.openai_api_key", "")
+    report = evaluate_intent_dataset(use_real_llm=True)
     assert report.get("skipped") is True
     assert report["passed"] is True

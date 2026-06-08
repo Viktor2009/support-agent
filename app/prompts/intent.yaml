@@ -19,6 +19,24 @@ classify_intent: |
 
   Извлеки order_id если упомянут.
 
+classify_intent_b: |
+  Определи intent клиентского сообщения. Ответ строго по схеме.
+
+  История: {dialog_summary}
+  Текст: {message}
+
+  Метки intent:
+  order_status | order_list | billing | faq | account_info | general | complaint | unclear
+
+  Правила:
+  - заказ/доставка/трек → order_status
+  - все заказы → order_list
+  - счета/оплата → billing
+  - политики/гарантия/оператор → faq
+  - тариф/баланс → account_info
+  - жалоба/возврат с негативом → complaint
+  - приветствие/благодарность → general
+
 resolve_from_dialog: |
   По истории диалога определи order_id.
 

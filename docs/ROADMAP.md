@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.6.0**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.7.0**
 
 ## Цели
 
@@ -185,8 +185,26 @@
 - [x] Расширение knowledge base (`support_hours.md`, `warranty.md`)
 - [x] Golden dataset 16 кейсов (intent eval)
 - [x] Real LLM eval: `run_eval.py --real-llm`, `dev.ps1 -Task eval-real`
-- [ ] A/B eval dashboards (Langfuse)
-- [ ] Plugin SDK documentation
+- [x] A/B eval dashboards (Langfuse)
+- [x] Plugin SDK documentation
+
+---
+
+## Фаза 8 — Pilot (недели 33–36) `[DONE — docs]`
+
+- [x] Pilot runbook (`docs/PILOT.md`)
+- [x] Langfuse A/B eval export (`run_ab_eval.py`, `docs/LANGFUSE.md`)
+- [x] Plugin SDK + example (`plugins/example_promo.py`, `docs/PLUGIN_SDK.md`)
+- [ ] Live pilot cohort (10–50 users) — operational
+- [ ] GA release checklist sign-off
+
+## Sprint 14 — завершён (Langfuse A/B + Plugin SDK + Pilot)
+
+- [x] `eval_intent.py` + `langfuse_eval.py` — A/B variants a/b
+- [x] `classify_intent_b` prompt + `EVAL_PROMPT_VARIANT`
+- [x] `PLUGIN_MODULE` dynamic tool loading
+- [x] `GET /admin/api/tools`
+- [x] Pilot, Langfuse, Plugin SDK docs
 
 ## Sprint 11 — завершён (Production Hardening)
 

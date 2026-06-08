@@ -1,0 +1,45 @@
+# Prompt templates for support agent nodes.
+# Placeholders: {dialog_summary}, {message}, {evidence}, {messages}
+
+classify_intent: |
+  Классифицируй обращение клиента в support.
+
+  Контекст диалога: {dialog_summary}
+  Сообщение: {message}
+
+  Intent:
+  - order_status — статус заказа, доставка
+  - account_info — баланс, тариф, профиль
+  - general — общий вопрос без данных из БД
+  - complaint — жалоба, возврат
+  - unclear — нужно уточнение
+
+  Извлеки order_id если упомянут.
+
+resolve_from_dialog: |
+  По истории диалога определи order_id.
+
+  Summary: {dialog_summary}
+  Последние сообщения: {messages}
+
+synthesize_answer: |
+  Ты support-агент. Ответь ТОЛЬКО на основе evidence.
+
+  Вопрос: {message}
+  Контекст: {dialog_summary}
+  Evidence: {evidence}
+
+  Не выдумывай статусы, даты, суммы.
+
+validate_answer: |
+  Проверь grounding ответа.
+
+  Ответ: {draft_answer}
+  Evidence: {evidence}
+
+clarify: |
+  Задай один короткий уточняющий вопрос клиенту. Сообщение: {message}
+
+summarize_dialog: |
+  Summarize this support conversation in 2 sentences:
+  {messages}

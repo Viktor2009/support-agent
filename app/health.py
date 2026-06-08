@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from app import database
+from app.cache import cache_backend, ping_cache
 from app.checkpointer import ping_checkpointer
 from app.config import settings
 
@@ -32,6 +33,8 @@ def build_health_payload() -> dict:
         "version": settings.app_version,
         "database": db_status,
         "checkpointer": cp_status,
+        "cache": ping_cache() if settings.redis_url else cache_backend(),
         "langfuse": langfuse,
         "auth": "enabled" if settings.api_keys.strip() else "disabled",
+        "rate_limit": settings.rate_limit_per_minute or "disabled",
     }

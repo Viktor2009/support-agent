@@ -20,7 +20,18 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "0.3.0"
+    app_version: str = "0.4.0"
+
+    # Cache / Redis (optional — empty = in-memory only)
+    redis_url: str = ""
+    cache_ttl_seconds: int = 300
+    intent_cache_ttl_seconds: int = 120
+
+    # Rate limiting (requests per minute per IP, 0 = disabled)
+    rate_limit_per_minute: int = 60
+
+    # Admin panel API key
+    admin_api_key: str = ""
 
     # Zendesk (optional)
     zendesk_subdomain: str = ""

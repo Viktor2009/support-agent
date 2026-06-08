@@ -4,6 +4,7 @@ import re
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 
+from app.cached_db import get_cached_intent, set_cached_intent
 from app.config import settings
 from app.database import (
     get_account_info,
@@ -77,6 +78,11 @@ def load_session_node(state: SupportState) -> dict:
 
 def classify_intent(state: SupportState) -> dict:
     last_msg = _last_user_message(state)
+    summary = state.get("dialog_summary", "")
+
+    cached = get_cached_intent(last_msg, summary)
+    if cached is not None:
+        return cached
 
     if settings.mock_llm or not settings.openai_api_key:
         result = _mock_classify(last_msg)
@@ -84,16 +90,18 @@ def classify_intent(state: SupportState) -> dict:
         llm = _get_llm()
         prompt = get_prompt(
             "classify_intent",
-            dialog_summary=state["dialog_summary"],
+            dialog_summary=summary,
             message=last_msg,
         )
         result = llm.with_structured_output(IntentResult).invoke(prompt)
 
-    return {
+    payload = {
         "intent": result.intent,
         "sentiment": result.sentiment,
         "extracted_order_id": result.order_id,
     }
+    set_cached_intent(last_msg, summary, payload)
+    return payload
 
 
 def check_escalation(state: SupportState) -> dict:

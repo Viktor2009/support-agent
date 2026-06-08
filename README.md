@@ -36,6 +36,29 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8080
 
 Swagger: http://127.0.0.1:8000/docs (или :8080)
 
+## Admin panel
+
+```
+http://127.0.0.1:8000/admin-ui/
+# Header: X-Admin-Key (set ADMIN_API_KEY in .env)
+```
+
+API: `/admin/api/stats`, `/admin/api/sessions`, `/admin/api/escalations`, `/admin/api/feedback`
+
+## Feedback
+
+```powershell
+curl -X POST http://127.0.0.1:8000/chat/feedback `
+  -H "Content-Type: application/json" `
+  -d '{"session_id":"s1","rating":5,"customer_id":"cust_456","comment":"Отлично"}'
+```
+
+## Eval pipeline
+
+```powershell
+.\scripts\dev.ps1 -Task eval
+```
+
 ## Chat widget
 
 ```

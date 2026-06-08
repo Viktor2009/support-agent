@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Agent Admin</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #111827; color: #f9fafb; }
+    header { padding: 1rem 1.5rem; background: #1f2937; display: flex; gap: 1rem; align-items: center; }
+    input { padding: 0.5rem; border-radius: 6px; border: 1px solid #374151; background: #111827; color: #fff; }
+    button { padding: 0.5rem 1rem; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    main { padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+    .card { background: #1f2937; border-radius: 10px; padding: 1rem; }
+    .metric { font-size: 2rem; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    td, th { padding: 0.4rem; border-bottom: 1px solid #374151; text-align: left; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Support Admin</strong>
+    <input id="admin-key" type="password" placeholder="X-Admin-Key" />
+    <button id="load-btn">Обновить</button>
+  </header>
+  <main>
+    <div class="card"><div>Всего сессий</div><div class="metric" id="s-total">—</div></div>
+    <div class="card"><div>Ожидают оператора</div><div class="metric" id="s-await">—</div></div>
+    <div class="card"><div>Feedback avg</div><div class="metric" id="s-rating">—</div></div>
+    <div class="card" style="grid-column: 1 / -1">
+      <h3>Эскалации</h3>
+      <table><thead><tr><th>Session</th><th>Customer</th><th>Summary</th></tr></thead><tbody id="esc-body"></tbody></table>
+    </div>
+  </main>
+  <script>
+    const keyInput = document.getElementById("admin-key");
+    const saved = localStorage.getItem("admin_key");
+    if (saved) keyInput.value = saved;
+
+    async function api(path) {
+      const res = await fetch(path, { headers: { "X-Admin-Key": keyInput.value } });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    document.getElementById("load-btn").onclick = async () => {
+      localStorage.setItem("admin_key", keyInput.value);
+      const stats = await api("/admin/api/stats");
+      document.getElementById("s-total").textContent = stats.sessions_total;
+      document.getElementById("s-await").textContent = stats.sessions_awaiting_operator;
+      document.getElementById("s-rating").textContent = stats.feedback_avg_rating ?? "—";
+      const esc = await api("/admin/api/escalations");
+      const body = document.getElementById("esc-body");
+      body.innerHTML = "";
+      for (const s of esc.sessions) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${s.session_id}</td><td>${s.customer_id || ""}</td><td>${(s.summary || "").slice(0, 80)}</td>`;
+        body.appendChild(tr);
+      }
+    };
+  </script>
+</body>
+</html>

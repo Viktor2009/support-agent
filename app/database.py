@@ -1,6 +1,12 @@
 from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, Text, create_engine, func
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
+from app.cached_db import (
+    get_cached_order,
+    get_cached_orders_list,
+    set_cached_order,
+    set_cached_orders_list,
+)
 from app.config import settings
 
 
@@ -50,6 +56,17 @@ class ChatSession(Base):
     status = Column(String, default="active")
     ticket_id = Column(String, nullable=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    feedback_id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String, nullable=False)
+    customer_id = Column(String, nullable=True)
+    rating = Column(Integer, nullable=False)
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 def _engine_kwargs(url: str) -> dict:
@@ -160,6 +177,10 @@ def get_db() -> Session:
 
 
 def get_order_status(order_id: int, customer_id: str | None) -> dict | None:
+    cached = get_cached_order(order_id, customer_id)
+    if cached is not None:
+        return cached
+
     with SessionLocal() as db:
         query = db.query(Order).filter(Order.order_id == order_id)
         if customer_id:
@@ -167,7 +188,7 @@ def get_order_status(order_id: int, customer_id: str | None) -> dict | None:
         row = query.first()
         if not row:
             return None
-        return {
+        data = {
             "order_id": row.order_id,
             "customer_id": row.customer_id,
             "status": row.status,
@@ -175,6 +196,8 @@ def get_order_status(order_id: int, customer_id: str | None) -> dict | None:
             "delivery_date": row.delivery_date,
             "total": row.total,
         }
+        set_cached_order(order_id, customer_id, data)
+        return data
 
 
 def get_account_info(customer_id: str) -> dict | None:
@@ -192,9 +215,13 @@ def get_account_info(customer_id: str) -> dict | None:
 
 
 def list_customer_orders(customer_id: str) -> list[dict]:
+    cached = get_cached_orders_list(customer_id)
+    if cached is not None:
+        return cached
+
     with SessionLocal() as db:
         rows = db.query(Order).filter(Order.customer_id == customer_id).all()
-        return [
+        data = [
             {
                 "order_id": r.order_id,
                 "status": r.status,
@@ -204,6 +231,8 @@ def list_customer_orders(customer_id: str) -> list[dict]:
             }
             for r in rows
         ]
+    set_cached_orders_list(customer_id, data)
+    return data
 
 
 def list_customer_invoices(customer_id: str) -> list[dict]:
@@ -219,3 +248,78 @@ def list_customer_invoices(customer_id: str) -> list[dict]:
             }
             for r in rows
         ]
+
+
+def save_feedback(
+    session_id: str,
+    rating: int,
+    customer_id: str | None = None,
+    comment: str | None = None,
+) -> dict:
+    with SessionLocal() as db:
+        row = Feedback(
+            session_id=session_id,
+            customer_id=customer_id,
+            rating=rating,
+            comment=comment,
+        )
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return {
+            "feedback_id": row.feedback_id,
+            "session_id": row.session_id,
+            "rating": row.rating,
+        }
+
+
+def list_feedback(limit: int = 50) -> list[dict]:
+    with SessionLocal() as db:
+        rows = db.query(Feedback).order_by(Feedback.created_at.desc()).limit(limit).all()
+        return [
+            {
+                "feedback_id": r.feedback_id,
+                "session_id": r.session_id,
+                "customer_id": r.customer_id,
+                "rating": r.rating,
+                "comment": r.comment,
+            }
+            for r in rows
+        ]
+
+
+def list_sessions(status: str | None = None, limit: int = 50) -> list[dict]:
+    with SessionLocal() as db:
+        query = db.query(ChatSession)
+        if status:
+            query = query.filter(ChatSession.status == status)
+        rows = query.order_by(ChatSession.updated_at.desc()).limit(limit).all()
+        return [
+            {
+                "session_id": r.session_id,
+                "customer_id": r.customer_id,
+                "status": r.status,
+                "summary": r.summary,
+                "ticket_id": r.ticket_id,
+                "message_count": len(r.messages or []),
+            }
+            for r in rows
+        ]
+
+
+def get_analytics_stats() -> dict:
+    with SessionLocal() as db:
+        total_sessions = db.query(ChatSession).count()
+        awaiting = db.query(ChatSession).filter(ChatSession.status == "awaiting_operator").count()
+        closed = db.query(ChatSession).filter(ChatSession.status == "closed").count()
+        feedback_rows = db.query(Feedback).all()
+        avg_rating = None
+        if feedback_rows:
+            avg_rating = round(sum(r.rating for r in feedback_rows) / len(feedback_rows), 2)
+        return {
+            "sessions_total": total_sessions,
+            "sessions_awaiting_operator": awaiting,
+            "sessions_closed": closed,
+            "feedback_count": len(feedback_rows),
+            "feedback_avg_rating": avg_rating,
+        }

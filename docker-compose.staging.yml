@@ -13,6 +13,16 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   app:
     build: .
     ports:
@@ -22,8 +32,12 @@ services:
       MOCK_LLM: "true"
       API_KEYS: "cust_456:staging-key-cust456"
       CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      REDIS_URL: redis://redis:6379/0
+      ADMIN_API_KEY: staging-admin-key
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:

@@ -1,0 +1,8 @@
+{"message": "Где мой заказ #1?", "customer_id": "cust_456", "expected_intent": "order_status"}
+{"message": "Покажи все мои заказы", "customer_id": "cust_456", "expected_intent": "order_list"}
+{"message": "Какие у меня счета?", "customer_id": "cust_456", "expected_intent": "billing"}
+{"message": "Сколько дней на возврат товара?", "customer_id": "cust_456", "expected_intent": "faq"}
+{"message": "Какой у меня тариф?", "customer_id": "cust_456", "expected_intent": "account_info"}
+{"message": "Привет!", "customer_id": "cust_456", "expected_intent": "general"}
+{"message": "Хочу возврат, сервис ужасный!", "customer_id": "cust_456", "expected_intent": "complaint"}
+{"message": "ммм", "customer_id": "cust_456", "expected_intent": "unclear"}

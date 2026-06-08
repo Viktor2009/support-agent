@@ -15,6 +15,7 @@ COPY alembic ./alembic
 COPY app ./app
 COPY knowledge ./knowledge
 COPY widget ./widget
+COPY admin ./admin
 COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
 RUN chmod +x scripts/docker-entrypoint.sh && chown -R appuser:appuser /app

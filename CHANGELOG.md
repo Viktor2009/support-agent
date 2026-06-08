@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-06-08
+
+### Added
+- Optional Redis cache + in-memory fallback (DB queries, intent classification)
+- Rate limiting middleware (`RATE_LIMIT_PER_MINUTE`)
+- `POST /chat/feedback` with persistence
+- Admin API (`/admin/api/*`) and dashboard (`/admin-ui/`)
+- Golden dataset eval pipeline (`tests/eval/`, `.\scripts\dev.ps1 -Task eval`)
+- 7 new tests — 51 total
+
 ## [0.3.0] — 2026-06-08
 
 ### Added

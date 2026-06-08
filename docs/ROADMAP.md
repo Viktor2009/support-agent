@@ -42,7 +42,7 @@
 - [x] Langfuse callbacks (optional)
 - [x] Dockerfile + docker-compose.staging
 - [x] Расширенный /health
-- [ ] Rate limiting
+- [x] Rate limiting
 
 ## Фаза 2 — Pilot (недели 5–8) `[DONE]`
 
@@ -52,13 +52,14 @@
 - [x] Chat widget (MVP) — `/widget/`
 - [ ] WebSocket/SSE streaming (опционально)
 
-## Фаза 3 — Масштабирование (недели 9–14)
+## Фаза 3 — Масштабирование (недели 9–14) `[IN PROGRESS]`
 
-- [ ] Redis cache (intent, DB)
+- [x] Redis cache (optional) + in-memory fallback
+- [x] Rate limiting (per IP)
+- [x] Eval pipeline (golden dataset, ≥85% intent accuracy)
+- [x] Feedback endpoint (`POST /chat/feedback`)
+- [x] Admin panel (`/admin-ui/`) + API (`/admin/api/*`)
 - [ ] Async API + asyncpg
-- [ ] Eval pipeline (golden dataset)
-- [ ] Feedback endpoint
-- [ ] Admin panel (sessions, escalations, analytics)
 
 ## Фаза 4 — Платформа (недели 15–24)
 
@@ -100,7 +101,14 @@
 - [x] Chat widget at `/widget/`
 - [x] 44 автотеста
 
-## Sprint 5 — следующий (Фаза 3 начало)
+## Sprint 5 — завершён (Фаза 3)
+
+- [x] Cache layer (memory / Redis)
+- [x] Rate limiting middleware
+- [x] Feedback + admin API + admin UI
+- [x] Golden dataset eval (51 tests)
+
+## Sprint 6 — следующий
 
 ## Definition of Done — Production v1.0
 

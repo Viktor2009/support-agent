@@ -25,6 +25,19 @@ class ChatResponse(BaseModel):
     gaps: list[str] = Field(default_factory=list)
 
 
+class FeedbackRequest(BaseModel):
+    session_id: str
+    rating: int = Field(..., ge=1, le=5)
+    customer_id: Optional[str] = None
+    comment: Optional[str] = None
+
+
+class FeedbackResponse(BaseModel):
+    feedback_id: int
+    session_id: str
+    rating: int
+
+
 class ResumeRequest(BaseModel):
     session_id: str
     operator_reply: str

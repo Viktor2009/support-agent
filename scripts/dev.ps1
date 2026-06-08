@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres", "staging")]
+    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres", "staging", "eval")]
     [string]$Task = "run"
 )
 
@@ -32,5 +32,9 @@ switch ($Task) {
     }
     "staging" {
         docker compose -f docker-compose.staging.yml up --build
+    }
+    "eval" {
+        $env:MOCK_LLM = "true"
+        .\.venv\Scripts\python.exe tests\eval\run_eval.py
     }
 }

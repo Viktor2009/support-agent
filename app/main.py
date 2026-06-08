@@ -5,21 +5,32 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.admin_routes import router as admin_router
 from app.auth import AuthContext, get_auth_context, resolve_customer_id
+from app.cache import init_cache, shutdown_cache
 from app.checkpointer import init_checkpointer, shutdown_checkpointer
 from app.config import parse_cors_origins, settings
-from app.database import get_account_info, get_order_status, init_db, list_customer_orders
+from app.database import (
+    get_account_info,
+    get_order_status,
+    init_db,
+    list_customer_orders,
+    save_feedback,
+)
 from app.health import build_health_payload
-from app.schemas import ChatRequest, ChatResponse, ResumeRequest
+from app.rate_limit import RateLimitMiddleware
+from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
 from app.service import resume_chat, run_chat
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    init_cache()
     init_checkpointer()
     yield
     shutdown_checkpointer()
+    shutdown_cache()
 
 
 app = FastAPI(
@@ -29,6 +40,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=parse_cors_origins(settings.cors_origins),
@@ -36,9 +48,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-_widget_dir = Path(__file__).resolve().parent.parent / "widget"
-if _widget_dir.exists():
-    app.mount("/widget", StaticFiles(directory=_widget_dir, html=True), name="widget")
+_root = Path(__file__).resolve().parent.parent
+for mount_path, folder in (("/widget", "widget"), ("/admin-ui", "admin")):
+    directory = _root / folder
+    if directory.exists():
+        app.mount(mount_path, StaticFiles(directory=directory, html=True), name=folder)
+
+app.include_router(admin_router)
 
 
 @app.get("/health")
@@ -75,6 +91,21 @@ def chat_resume(
         )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/chat/feedback", response_model=FeedbackResponse)
+def chat_feedback(
+    request: FeedbackRequest,
+    auth: AuthContext | None = Depends(get_auth_context),
+):
+    customer_id = resolve_customer_id(auth, request.customer_id)
+    result = save_feedback(
+        session_id=request.session_id,
+        rating=request.rating,
+        customer_id=customer_id,
+        comment=request.comment,
+    )
+    return FeedbackResponse(**result)
 
 
 @app.get("/demo/orders/{order_id}")

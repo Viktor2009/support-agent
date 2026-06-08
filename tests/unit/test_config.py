@@ -1,0 +1,23 @@
+from app.config import parse_api_keys, parse_cors_origins
+from app.observability import graph_invoke_config
+
+
+def test_parse_api_keys():
+    mapping = parse_api_keys("cust_456:key1,cust_789:key2")
+    assert mapping == {"key1": "cust_456", "key2": "cust_789"}
+
+
+def test_parse_cors_origins_wildcard():
+    assert parse_cors_origins("*") == ["*"]
+
+
+def test_parse_cors_origins_list():
+    assert parse_cors_origins("http://a.com, http://b.com") == [
+        "http://a.com",
+        "http://b.com",
+    ]
+
+
+def test_graph_invoke_config_includes_thread_id():
+    config = graph_invoke_config("session-xyz")
+    assert config["configurable"]["thread_id"] == "session-xyz"

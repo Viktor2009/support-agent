@@ -36,3 +36,19 @@ def shutdown_checkpointer() -> None:
 def reset_checkpointer() -> None:
     """Drop checkpointer (for test isolation)."""
     shutdown_checkpointer()
+
+
+def ping_checkpointer() -> str:
+    """Return checkpointer status for health checks."""
+    try:
+        if not is_postgres():
+            get_checkpointer()
+            return "memory"
+        get_checkpointer()
+        if _pool is None:
+            return "not_initialized"
+        with _pool.connection() as conn:
+            conn.execute("SELECT 1")
+        return "ok"
+    except Exception:
+        return "error"

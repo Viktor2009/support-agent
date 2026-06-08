@@ -2,23 +2,25 @@
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-08
+
 ### Added
-- Sprint 2: PostgreSQL docker-compose, Alembic migrations
-- Unified SQLAlchemy session store (`sessions` table)
-- PostgresSaver / MemorySaver checkpointer (auto by `DATABASE_URL`)
-- E2E test: HITL survives graph reset (`test_escalation_survives_graph_reset`)
-- `configure_database()` for test isolation
-- Dev script tasks: `migrate`, `postgres`
+- API Key auth (`X-API-Key` header, `API_KEYS` config)
+- CORS whitelist (`CORS_ORIGINS`)
+- Langfuse optional tracing (`LANGFUSE_*` env vars)
+- Extended `/health` (database, checkpointer, auth, langfuse status)
+- Dockerfile + `docker-compose.staging.yml`
+- 8 new tests (auth, config, health) — 32 total
 
 ### Changed
-- Removed separate `sessions.db` — single database for app + dialog memory
-- `session_store` uses SQLAlchemy via `app.database` module namespace
+- App version 0.2.0
+- `customer_id` resolved from API key when auth enabled
 
 ## [0.1.0] — 2026-06-08
 
 ### Added
 - FastAPI + LangGraph support agent MVP
-- SQLite: customers, orders, session memory
-- Intents: order_status, account_info, general, complaint, unclear
+- Test infrastructure, Alembic, PostgreSQL docker-compose
+- Unified SQLAlchemy session store, PostgresSaver / MemorySaver
 - HITL escalation with interrupt/resume
 - Mock LLM mode for offline development

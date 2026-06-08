@@ -4,6 +4,7 @@ from langgraph.types import Command
 from app.checkpointer import reset_checkpointer
 from app.graph.builder import build_graph
 from app.graph.state import SupportState
+from app.observability import graph_invoke_config
 from app.schemas import ChatResponse, Citation
 
 _graph = None
@@ -58,7 +59,7 @@ def _to_response(state: SupportState) -> ChatResponse:
 
 def run_chat(session_id: str, message: str, customer_id: str | None) -> ChatResponse | dict:
     graph = get_graph()
-    config = {"configurable": {"thread_id": session_id}}
+    config = graph_invoke_config(session_id)
 
     input_state: SupportState = {
         "session_id": session_id,
@@ -100,7 +101,7 @@ def run_chat(session_id: str, message: str, customer_id: str | None) -> ChatResp
 
 def resume_chat(session_id: str, operator_reply: str, ticket_id: str | None = None) -> ChatResponse:
     graph = get_graph()
-    config = {"configurable": {"thread_id": session_id}}
+    config = graph_invoke_config(session_id)
 
     result = graph.invoke(
         Command(resume={"operator_reply": operator_reply, "ticket_id": ticket_id}),

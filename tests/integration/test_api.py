@@ -1,7 +1,12 @@
 def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+    assert data["status"] in ("ok", "degraded")
+    assert data["database"] == "ok"
+    assert data["checkpointer"] in ("memory", "ok")
+    assert data["auth"] == "disabled"
+    assert data["version"] == "0.2.0"
 
 
 def test_chat_order_status(client):

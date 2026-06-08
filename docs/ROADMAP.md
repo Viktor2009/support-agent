@@ -30,18 +30,19 @@
 - [x] Промпты в app/prompts/
 - [x] CHANGELOG.md
 
-## Фаза 1 — Production foundation (недели 2–4) `[IN PROGRESS]`
+## Фаза 1 — Production foundation (недели 2–4) `[DONE]`
 
 - [x] PostgreSQL docker-compose
 - [x] Alembic миграции (customers, orders, sessions)
 - [x] Session store → SQLAlchemy (единая БД)
 - [x] PostgresSaver / MemorySaver (auto по DATABASE_URL)
 - [x] E2E тест: эскалация → reset graph → resume
-- [ ] API Key auth, customer_id из токена
-- [ ] CORS whitelist, rate limiting
-- [ ] Langfuse / LangSmith трейсы
-- [ ] Dockerfile + staging deploy
-- [ ] Расширенный /health
+- [x] API Key auth, customer_id из токена
+- [x] CORS whitelist (configurable)
+- [x] Langfuse callbacks (optional)
+- [x] Dockerfile + docker-compose.staging
+- [x] Расширенный /health
+- [ ] Rate limiting
 
 ## Фаза 2 — Pilot (недели 5–8)
 
@@ -83,12 +84,15 @@
 - [x] PostgresSaver / MemorySaver checkpointer
 - [x] E2E тест HITL после reset graph (24 теста)
 
-## Sprint 3 (дни 11–14) — следующий
+## Sprint 3 (дни 11–14) — завершён
 
-- [ ] API Key middleware
-- [ ] Langfuse integration
-- [ ] Расширенный /health
-- [ ] Staging deploy
+- [x] API Key middleware (`X-API-Key` → customer_id)
+- [x] Langfuse integration (optional callbacks)
+- [x] Расширенный /health
+- [x] Dockerfile + docker-compose.staging.yml
+- [x] 32 автотеста
+
+## Sprint 4 — следующий (Фаза 2 начало)
 
 ## Definition of Done — Production v1.0
 

@@ -12,6 +12,7 @@ def isolated_env(tmp_path, monkeypatch):
     """Fresh SQLite DB and mock LLM for every test."""
     monkeypatch.setattr(settings, "mock_llm", True)
     monkeypatch.setattr(settings, "openai_api_key", "")
+    monkeypatch.setattr(settings, "api_keys", "")
     db_file = (tmp_path / "support.db").as_posix()
     configure_database(f"sqlite:///{db_file}")
     reset_all()

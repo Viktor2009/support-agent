@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres")]
+    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres", "staging")]
     [string]$Task = "run"
 )
 
@@ -29,5 +29,8 @@ switch ($Task) {
     "postgres" {
         docker compose up -d postgres
         Write-Host "Postgres: postgresql://support:support@localhost:5432/support_agent"
+    }
+    "staging" {
+        docker compose -f docker-compose.staging.yml up --build
     }
 }

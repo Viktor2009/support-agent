@@ -36,6 +36,25 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8080
 
 Swagger: http://127.0.0.1:8000/docs (или :8080)
 
+## Staging (Docker)
+
+```powershell
+docker compose -f docker-compose.staging.yml up --build
+# API: http://127.0.0.1:8000/docs
+# Header: X-API-Key: staging-key-cust456
+```
+
+## Auth (API Key)
+
+Когда `API_KEYS` задан в `.env`, все `/chat` и `/demo` эндпоинты требуют заголовок:
+
+```
+X-API-Key: your-key
+```
+
+Формат `.env`: `API_KEYS=cust_456:key-for-456,cust_789:key-for-789`  
+`customer_id` берётся из ключа — передавать в body необязательно.
+
 ## PostgreSQL (production-like)
 
 ```powershell

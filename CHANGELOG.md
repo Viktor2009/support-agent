@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-08
+
+### Added
+- Intents: `order_list`, `billing`, `faq`
+- RAG: `knowledge/faq.md` + keyword retriever + `search_knowledge` graph node
+- Invoices table + billing queries
+- Zendesk ticket creation on escalation (mock + real API)
+- Chat widget at `/widget/`
+- 12 new tests — 44 total
+
 ## [0.2.0] — 2026-06-08
 
 ### Added

@@ -29,6 +29,17 @@ class Order(Base):
     total = Column(Float, nullable=False)
 
 
+class Invoice(Base):
+    __tablename__ = "invoices"
+
+    invoice_id = Column(Integer, primary_key=True, autoincrement=True)
+    customer_id = Column(String, nullable=False)
+    order_id = Column(Integer, nullable=True)
+    amount = Column(Float, nullable=False)
+    status = Column(String, nullable=False)
+    due_date = Column(String, nullable=True)
+
+
 class ChatSession(Base):
     __tablename__ = "sessions"
 
@@ -116,6 +127,31 @@ def init_db() -> None:
                     ),
                 ]
             )
+            db.add_all(
+                [
+                    Invoice(
+                        customer_id="cust_456",
+                        order_id=1,
+                        amount=4590.0,
+                        status="paid",
+                        due_date="2025-06-01",
+                    ),
+                    Invoice(
+                        customer_id="cust_456",
+                        order_id=2,
+                        amount=1290.0,
+                        status="pending",
+                        due_date="2025-06-15",
+                    ),
+                    Invoice(
+                        customer_id="cust_789",
+                        order_id=3,
+                        amount=890.0,
+                        status="paid",
+                        due_date="2025-05-18",
+                    ),
+                ]
+            )
             db.commit()
 
 
@@ -165,6 +201,21 @@ def list_customer_orders(customer_id: str) -> list[dict]:
                 "ship_date": r.ship_date,
                 "delivery_date": r.delivery_date,
                 "total": r.total,
+            }
+            for r in rows
+        ]
+
+
+def list_customer_invoices(customer_id: str) -> list[dict]:
+    with SessionLocal() as db:
+        rows = db.query(Invoice).filter(Invoice.customer_id == customer_id).all()
+        return [
+            {
+                "invoice_id": r.invoice_id,
+                "order_id": r.order_id,
+                "amount": r.amount,
+                "status": r.status,
+                "due_date": r.due_date,
             }
             for r in rows
         ]

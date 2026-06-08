@@ -6,7 +6,13 @@ def test_health(client):
     assert data["database"] == "ok"
     assert data["checkpointer"] in ("memory", "ok")
     assert data["auth"] == "disabled"
-    assert data["version"] == "0.2.0"
+    assert data["version"] == "0.3.0"
+
+
+def test_widget_page(client):
+    response = client.get("/widget/")
+    assert response.status_code == 200
+    assert "Support Chat" in response.text
 
 
 def test_chat_order_status(client):

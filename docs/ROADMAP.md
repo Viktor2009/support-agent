@@ -44,12 +44,12 @@
 - [x] Расширенный /health
 - [ ] Rate limiting
 
-## Фаза 2 — Pilot (недели 5–8)
+## Фаза 2 — Pilot (недели 5–8) `[DONE]`
 
-- [ ] Новые intents: order_list, order_cancel, billing, faq
-- [ ] RAG (pgvector): ingest + search_knowledge node
-- [ ] Zendesk integration при эскалации
-- [ ] Chat widget (MVP)
+- [x] Новые intents: order_list, billing, faq
+- [x] RAG: knowledge/ + search_knowledge node
+- [x] Zendesk integration при эскалации (mock + real API)
+- [x] Chat widget (MVP) — `/widget/`
 - [ ] WebSocket/SSE streaming (опционально)
 
 ## Фаза 3 — Масштабирование (недели 9–14)
@@ -92,7 +92,15 @@
 - [x] Dockerfile + docker-compose.staging.yml
 - [x] 32 автотеста
 
-## Sprint 4 — следующий (Фаза 2 начало)
+## Sprint 4 — завершён (Фаза 2)
+
+- [x] Intents: order_list, billing, faq
+- [x] RAG keyword retriever + `knowledge/faq.md`
+- [x] Zendesk mock/real ticket on escalation
+- [x] Chat widget at `/widget/`
+- [x] 44 автотеста
+
+## Sprint 5 — следующий (Фаза 3 начало)
 
 ## Definition of Done — Production v1.0
 

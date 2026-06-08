@@ -5,9 +5,16 @@ from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 
 from app.config import settings
-from app.database import get_account_info, get_order_status, list_customer_orders
+from app.database import (
+    get_account_info,
+    get_order_status,
+    list_customer_invoices,
+    list_customer_orders,
+)
 from app.graph.state import SupportState
+from app.integrations.zendesk import create_ticket
 from app.prompts import get_prompt
+from app.rag.retriever import search_knowledge
 from app.schemas import DialogContext, IntentResult, SupportAnswer, ValidationResult
 from app.session_store import load_session, save_session
 
@@ -27,6 +34,10 @@ def _last_user_message(state: SupportState) -> str:
     return ""
 
 
+def _all_evidence(state: SupportState) -> list[dict]:
+    return list(state.get("db_evidence", [])) + list(state.get("rag_evidence", []))
+
+
 def _mock_classify(message: str) -> IntentResult:
     lower = message.lower()
     order_id = None
@@ -34,8 +45,18 @@ def _mock_classify(message: str) -> IntentResult:
     if match:
         order_id = int(match.group(1))
 
-    if any(w in lower for w in ("жалоб", "вернут", "возврат", "ужас", "кошмар")):
-        return IntentResult(intent="complaint", sentiment="negative", order_id=order_id)
+    if any(w in lower for w in ("жалоб", "ужас", "кошмар", "возврат")) and "политик" not in lower:
+        if "хочу" in lower or "жалоб" in lower or "ужас" in lower or "кошмар" in lower:
+            return IntentResult(intent="complaint", sentiment="negative", order_id=order_id)
+    if any(
+        w in lower
+        for w in ("политик", "как оформить", "можно ли", "условия", "faq", "сколько дней")
+    ):
+        return IntentResult(intent="faq", sentiment="neutral", order_id=order_id)
+    if any(w in lower for w in ("счёт", "счет", "оплат", "invoice", "платёж", "платеж", "счета")):
+        return IntentResult(intent="billing", sentiment="neutral", order_id=order_id)
+    if any(w in lower for w in ("список заказ", "все заказы", "мои заказы", "сколько заказов")):
+        return IntentResult(intent="order_list", sentiment="neutral", order_id=order_id)
     if any(w in lower for w in ("заказ", "достав", "статус", "трек")):
         return IntentResult(intent="order_status", sentiment="neutral", order_id=order_id)
     if any(w in lower for w in ("аккаунт", "баланс", "тариф", "план", "профил")):
@@ -104,6 +125,30 @@ def query_db(state: SupportState) -> dict:
                 }
             )
 
+    elif intent == "order_list" and customer_id:
+        orders = list_customer_orders(customer_id)
+        if orders:
+            evidence.append(
+                {
+                    "source_type": "database",
+                    "source_id": "orders",
+                    "query": f"customer_id={customer_id}",
+                    "data": orders,
+                }
+            )
+
+    elif intent == "billing" and customer_id:
+        invoices = list_customer_invoices(customer_id)
+        if invoices:
+            evidence.append(
+                {
+                    "source_type": "database",
+                    "source_id": "invoices",
+                    "query": f"customer_id={customer_id}",
+                    "data": invoices,
+                }
+            )
+
     elif intent == "account_info" and customer_id:
         data = get_account_info(customer_id)
         if data:
@@ -127,6 +172,19 @@ def query_db(state: SupportState) -> dict:
             )
 
     return {"db_evidence": evidence}
+
+
+def search_knowledge_node(state: SupportState) -> dict:
+    last_msg = _last_user_message(state)
+    hits = search_knowledge(last_msg)
+    citations = [
+        {
+            "source_type": "knowledge",
+            "detail": f"{hit['title']} ({hit['source_id']}, score={hit['score']})",
+        }
+        for hit in hits
+    ]
+    return {"rag_evidence": hits, "citations": citations}
 
 
 def resolve_from_dialog(state: SupportState) -> dict:
@@ -176,35 +234,75 @@ def resolve_from_dialog(state: SupportState) -> dict:
     }
 
 
+def _mock_synthesize(state: SupportState, evidence: list[dict]) -> dict:
+    intent = state["intent"]
+    if evidence and intent == "order_status":
+        data = evidence[0]["data"]
+        answer = (
+            f"Заказ #{data['order_id']}: статус «{data['status']}». "
+            f"Доставка ожидается {data.get('delivery_date') or 'уточняется'}."
+        )
+        return {"draft_answer": answer, "confidence": "high", "gaps": []}
+
+    if evidence and intent == "order_list":
+        orders = evidence[0]["data"]
+        lines = [f"#{o['order_id']}: {o['status']}" for o in orders]
+        return {
+            "draft_answer": f"Ваши заказы: {', '.join(lines)}.",
+            "confidence": "high",
+            "gaps": [],
+        }
+
+    if evidence and intent == "billing":
+        invoices = evidence[0]["data"]
+        lines = [f"#{i['invoice_id']}: {i['amount']} ₽ ({i['status']})" for i in invoices]
+        return {
+            "draft_answer": f"Счета: {', '.join(lines)}.",
+            "confidence": "high",
+            "gaps": [],
+        }
+
+    if evidence and intent == "account_info":
+        data = evidence[0]["data"]
+        answer = (
+            f"Аккаунт {data.get('name', data.get('customer_id'))}: "
+            f"тариф {data.get('plan')}, баланс {data.get('balance')}."
+        )
+        return {"draft_answer": answer, "confidence": "high", "gaps": []}
+
+    if evidence and intent == "faq":
+        hit = state.get("rag_evidence", [{}])[0]
+        text = hit.get("text", "")
+        title = hit.get("title", "FAQ")
+        return {
+            "draft_answer": f"{title}: {text[:400]}",
+            "confidence": "high",
+            "gaps": [],
+        }
+
+    if intent == "general":
+        return {
+            "draft_answer": (
+                "Здравствуйте! Чем могу помочь? "
+                "Могу проверить статус заказа, счета или ответить на FAQ."
+            ),
+            "confidence": "high",
+            "gaps": [],
+        }
+
+    return {
+        "draft_answer": "Не нашёл данные в системе. Уточните номер заказа или вопрос.",
+        "confidence": "low",
+        "gaps": [],
+    }
+
+
 def synthesize_answer(state: SupportState) -> dict:
     last_msg = _last_user_message(state)
-    evidence = state.get("db_evidence", [])
+    evidence = _all_evidence(state)
 
     if settings.mock_llm or not settings.openai_api_key:
-        if evidence:
-            data = evidence[0]["data"]
-            if state["intent"] == "order_status":
-                answer = (
-                    f"Заказ #{data['order_id']}: статус «{data['status']}». "
-                    f"Доставка ожидается {data.get('delivery_date') or 'уточняется'}."
-                )
-                confidence = "high"
-            else:
-                answer = (
-                    f"Аккаунт {data.get('name', data.get('customer_id'))}: "
-                    f"тариф {data.get('plan')}, баланс {data.get('balance')}."
-                )
-                confidence = "high"
-        elif state["intent"] == "general":
-            answer = (
-                "Здравствуйте! Чем могу помочь? "
-                "Могу проверить статус заказа или данные аккаунта."
-            )
-            confidence = "high"
-        else:
-            answer = "Не нашёл данные в системе. Уточните номер заказа или customer_id."
-            confidence = "low"
-        return {"draft_answer": answer, "confidence": confidence, "gaps": []}
+        return _mock_synthesize(state, evidence)
 
     llm = _get_llm()
     result = llm.with_structured_output(SupportAnswer).invoke(
@@ -226,11 +324,18 @@ def validate_answer(state: SupportState) -> dict:
     if state["intent"] == "general":
         return {}
 
-    if state["intent"] in ("order_status", "account_info") and not state.get("db_evidence"):
+    if state["intent"] == "faq" and not state.get("rag_evidence"):
         return {
             "confidence": "low",
-            "escalation_reason": "no_db_evidence_for_factual_query",
+            "escalation_reason": "no_rag_evidence_for_faq",
         }
+
+    if state["intent"] in ("order_status", "account_info", "order_list", "billing"):
+        if not state.get("db_evidence"):
+            return {
+                "confidence": "low",
+                "escalation_reason": "no_db_evidence_for_factual_query",
+            }
 
     if settings.mock_llm or not settings.openai_api_key:
         return {}
@@ -240,7 +345,7 @@ def validate_answer(state: SupportState) -> dict:
         get_prompt(
             "validate_answer",
             draft_answer=state["draft_answer"],
-            evidence=state.get("db_evidence", []),
+            evidence=_all_evidence(state),
         )
     )
     if not check.grounded:
@@ -251,7 +356,7 @@ def validate_answer(state: SupportState) -> dict:
 def clarify(state: SupportState) -> dict:
     if settings.mock_llm or not settings.openai_api_key:
         return {
-            "draft_answer": "Уточните, пожалуйста: номер заказа или вопрос по аккаунту?",
+            "draft_answer": "Уточните: номер заказа, вопрос по счёту или FAQ?",
             "confidence": "medium",
         }
     llm = _get_llm()
@@ -262,6 +367,13 @@ def clarify(state: SupportState) -> dict:
 def escalate(state: SupportState) -> dict:
     from langgraph.types import interrupt
 
+    ticket_id = create_ticket(
+        session_id=state["session_id"],
+        customer_id=state.get("customer_id"),
+        reason=state.get("escalation_reason", "escalation"),
+        transcript=[m.content for m in state["messages"]],
+    )
+
     payload = interrupt(
         {
             "reason": state.get("escalation_reason", "escalation"),
@@ -270,12 +382,13 @@ def escalate(state: SupportState) -> dict:
             "draft_answer": state.get("draft_answer", ""),
             "customer_id": state.get("customer_id"),
             "db_evidence": state.get("db_evidence", []),
+            "ticket_id": ticket_id,
         }
     )
     return {
         "draft_answer": payload.get("operator_reply", state.get("draft_answer", "")),
         "escalated": True,
-        "ticket_id": payload.get("ticket_id"),
+        "ticket_id": payload.get("ticket_id") or ticket_id,
         "needs_interrupt": False,
     }
 

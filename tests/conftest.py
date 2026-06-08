@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from app.config import settings
 from app.database import configure_database
 from app.main import app
+from app.rag.loader import reset_chunks
 from app.service import reset_all
 
 
@@ -15,6 +16,7 @@ def isolated_env(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "api_keys", "")
     db_file = (tmp_path / "support.db").as_posix()
     configure_database(f"sqlite:///{db_file}")
+    reset_chunks()
     reset_all()
     yield
     reset_all()

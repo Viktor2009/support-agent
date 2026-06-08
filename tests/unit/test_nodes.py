@@ -55,6 +55,27 @@ def test_mock_classify_unclear():
     assert result["intent"] == "unclear"
 
 
+def test_mock_classify_order_list():
+    result = nodes.classify_intent(_state("Покажи все мои заказы"))
+    assert result["intent"] == "order_list"
+
+
+def test_mock_classify_billing():
+    result = nodes.classify_intent(_state("Какие у меня счета?"))
+    assert result["intent"] == "billing"
+
+
+def test_mock_classify_faq():
+    result = nodes.classify_intent(_state("Какая политика возврата?"))
+    assert result["intent"] == "faq"
+
+
+def test_search_knowledge_node():
+    result = nodes.search_knowledge_node(_state("Сколько дней на возврат?", intent="faq"))
+    assert result["rag_evidence"]
+    assert result["citations"]
+
+
 def test_check_escalation_on_complaint():
     state = _state(
         "жалоба",

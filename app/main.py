@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.auth import AuthContext, get_auth_context, resolve_customer_id
 from app.checkpointer import init_checkpointer, shutdown_checkpointer
@@ -33,6 +35,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_widget_dir = Path(__file__).resolve().parent.parent / "widget"
+if _widget_dir.exists():
+    app.mount("/widget", StaticFiles(directory=_widget_dir, html=True), name="widget")
 
 
 @app.get("/health")

@@ -36,6 +36,22 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8080
 
 Swagger: http://127.0.0.1:8000/docs (или :8080)
 
+## Chat widget
+
+```
+http://127.0.0.1:8000/widget/?customer_id=cust_456
+```
+
+## Новые intents (v0.3.0)
+
+| Intent | Пример |
+|--------|--------|
+| `order_list` | «Покажи все мои заказы» |
+| `billing` | «Какие у меня счета?» |
+| `faq` | «Какая политика возврата?» |
+
+FAQ отвечает из `knowledge/faq.md` (RAG keyword search).
+
 ## Staging (Docker)
 
 ```powershell

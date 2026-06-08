@@ -21,6 +21,24 @@ def test_run_chat_account_info():
     assert "pro" in result.answer.lower() or "1200" in result.answer
 
 
+def test_run_chat_order_list():
+    result = run_chat("g7", "Покажи все мои заказы", "cust_456")
+    assert result.intent == "order_list"
+    assert "#1" in result.answer or "shipped" in result.answer.lower()
+
+
+def test_run_chat_billing():
+    result = run_chat("g8", "Какие у меня счета?", "cust_456")
+    assert result.intent == "billing"
+    assert "1290" in result.answer or "pending" in result.answer.lower()
+
+
+def test_run_chat_faq():
+    result = run_chat("g9", "Сколько дней на возврат товара?", "cust_456")
+    assert result.intent == "faq"
+    assert "14" in result.answer
+
+
 def test_run_chat_escalation():
     result = run_chat("g4", "Хочу возврат, сервис ужасный!", "cust_456")
     assert isinstance(result, dict)

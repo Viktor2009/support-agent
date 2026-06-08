@@ -32,7 +32,16 @@ class ResumeRequest(BaseModel):
 
 
 class IntentResult(BaseModel):
-    intent: Literal["order_status", "account_info", "general", "complaint", "unclear"]
+    intent: Literal[
+        "order_status",
+        "order_list",
+        "billing",
+        "faq",
+        "account_info",
+        "general",
+        "complaint",
+        "unclear",
+    ]
     sentiment: Literal["positive", "neutral", "negative"]
     order_id: Optional[int] = None
 

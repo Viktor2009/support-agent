@@ -20,7 +20,13 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "0.2.0"
+    app_version: str = "0.3.0"
+
+    # Zendesk (optional)
+    zendesk_subdomain: str = ""
+    zendesk_email: str = ""
+    zendesk_api_token: str = ""
+    zendesk_mock: bool = True
 
 
 settings = Settings()

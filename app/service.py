@@ -45,6 +45,16 @@ def _to_response(state: SupportState) -> ChatResponse:
             )
         )
 
+    for item in state.get("rag_evidence", []):
+        title = item.get("title", item.get("source_id", "faq"))
+        snippet = item.get("text", "")[:120]
+        citations.append(
+            Citation(
+                source_type="knowledge",
+                detail=f"{title}: {snippet}",
+            )
+        )
+
     return ChatResponse(
         answer=state.get("draft_answer", ""),
         intent=state.get("intent"),
@@ -67,6 +77,7 @@ def run_chat(session_id: str, message: str, customer_id: str | None) -> ChatResp
         "messages": [HumanMessage(content=message)],
         "dialog_summary": "",
         "db_evidence": [],
+        "rag_evidence": [],
         "citations": [],
         "draft_answer": "",
         "gaps": [],

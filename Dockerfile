@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app
+COPY knowledge ./knowledge
+COPY widget ./widget
 COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
 RUN chmod +x scripts/docker-entrypoint.sh && chown -R appuser:appuser /app

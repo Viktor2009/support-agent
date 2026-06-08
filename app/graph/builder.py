@@ -4,6 +4,8 @@ from app.checkpointer import get_checkpointer
 from app.graph import nodes
 from app.graph.state import SupportState
 
+DB_INTENTS = ("order_status", "order_list", "billing", "account_info")
+
 
 def route_after_escalation_check(state: SupportState) -> str:
     if state.get("escalated"):
@@ -11,8 +13,10 @@ def route_after_escalation_check(state: SupportState) -> str:
     intent = state.get("intent")
     if intent == "unclear":
         return "clarify"
-    if intent in ("order_status", "account_info"):
+    if intent in DB_INTENTS:
         return "query_db"
+    if intent == "faq":
+        return "search_knowledge"
     if intent == "complaint":
         return "escalate"
     return "synthesize_answer"
@@ -33,6 +37,7 @@ def build_graph():
     graph.add_node("classify_intent", nodes.classify_intent)
     graph.add_node("check_escalation", nodes.check_escalation)
     graph.add_node("query_db", nodes.query_db)
+    graph.add_node("search_knowledge", nodes.search_knowledge_node)
     graph.add_node("resolve_from_dialog", nodes.resolve_from_dialog)
     graph.add_node("synthesize_answer", nodes.synthesize_answer)
     graph.add_node("validate_answer", nodes.validate_answer)
@@ -47,6 +52,7 @@ def build_graph():
 
     graph.add_edge("query_db", "resolve_from_dialog")
     graph.add_edge("resolve_from_dialog", "synthesize_answer")
+    graph.add_edge("search_knowledge", "synthesize_answer")
     graph.add_edge("synthesize_answer", "validate_answer")
     graph.add_conditional_edges("validate_answer", route_after_validate)
 

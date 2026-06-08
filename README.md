@@ -110,7 +110,8 @@ Security checklist: [docs/SECURITY.md](docs/SECURITY.md)
 TLS / nginx: [docs/TLS.md](docs/TLS.md)  
 Langfuse A/B eval: [docs/LANGFUSE.md](docs/LANGFUSE.md)  
 Plugin SDK: [docs/PLUGIN_SDK.md](docs/PLUGIN_SDK.md)  
-Pilot guide: [docs/PILOT.md](docs/PILOT.md)
+Pilot guide: [docs/PILOT.md](docs/PILOT.md)  
+Testing guide: [docs/TESTING.md](docs/TESTING.md)
 
 ## Async API (v1.5.0)
 

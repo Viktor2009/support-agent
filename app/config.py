@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "1.4.0"
+    app_version: str = "1.4.1"
 
     # RAG: auto | keyword | embedding
     rag_mode: str = "auto"
@@ -55,6 +55,21 @@ settings = Settings()
 
 def is_postgres() -> bool:
     return settings.database_url.startswith("postgresql")
+
+
+def to_sync_database_url(url: str) -> str:
+    """Convert generic SQLAlchemy URL to sync driver URL (psycopg3 for Postgres)."""
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
+def to_psycopg_conninfo(url: str) -> str:
+    """Libpq connection string for psycopg pool (no SQLAlchemy driver suffix)."""
+    sync_url = to_sync_database_url(url)
+    if sync_url.startswith("postgresql+psycopg://"):
+        return sync_url.replace("postgresql+psycopg://", "postgresql://", 1)
+    return sync_url
 
 
 def to_async_database_url(url: str) -> str:

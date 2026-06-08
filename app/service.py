@@ -104,8 +104,8 @@ def _build_input_state(
     }
 
 
-def _interrupt_payload(graph, config) -> dict | None:
-    snapshot = graph.get_state(config)
+async def _interrupt_payload(graph, config) -> dict | None:
+    snapshot = await graph.aget_state(config)
     if not snapshot.tasks:
         return None
     for task in snapshot.tasks:
@@ -126,10 +126,10 @@ async def run_chat(
     input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
 
     result = await graph.ainvoke(input_state, config=config)
-    interrupt_payload = _interrupt_payload(graph, config)
+    interrupt_payload = await _interrupt_payload(graph, config)
     if interrupt_payload is not None:
         record_escalation()
-        snapshot = graph.get_state(config)
+        snapshot = await graph.aget_state(config)
         return {
             "status": "awaiting_operator",
             "interrupt": interrupt_payload,
@@ -176,10 +176,10 @@ async def stream_chat(
         elif mode == "values":
             final_state = chunk
 
-    interrupt_payload = _interrupt_payload(graph, config)
+    interrupt_payload = await _interrupt_payload(graph, config)
     if interrupt_payload is not None:
         record_escalation()
-        snapshot = graph.get_state(config)
+        snapshot = await graph.aget_state(config)
         yield format_sse(
             "interrupt",
             {

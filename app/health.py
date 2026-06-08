@@ -21,7 +21,7 @@ def check_database() -> str:
 async def build_health_payload() -> dict:
     db_status = check_database()
     db_async = await ping_database_async()
-    cp_status = ping_checkpointer()
+    cp_status = await ping_checkpointer()
     langfuse = (
         "configured"
         if settings.langfuse_public_key and settings.langfuse_secret_key

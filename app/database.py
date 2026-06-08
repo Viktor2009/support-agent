@@ -7,7 +7,7 @@ from app.cached_db import (
     set_cached_order,
     set_cached_orders_list,
 )
-from app.config import settings
+from app.config import settings, to_sync_database_url
 from app.tenant import DEFAULT_TENANT
 
 
@@ -81,7 +81,10 @@ def _engine_kwargs(url: str) -> dict:
     return {}
 
 
-engine = create_engine(settings.database_url, **_engine_kwargs(settings.database_url))
+engine = create_engine(
+    to_sync_database_url(settings.database_url),
+    **_engine_kwargs(settings.database_url),
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
@@ -92,7 +95,10 @@ def reset_engine(url: str | None = None) -> None:
     if engine is not None:
         Base.metadata.drop_all(bind=engine)
         engine.dispose()
-    engine = create_engine(db_url, **_engine_kwargs(db_url))
+    engine = create_engine(
+        to_sync_database_url(db_url),
+        **_engine_kwargs(db_url),
+    )
     SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

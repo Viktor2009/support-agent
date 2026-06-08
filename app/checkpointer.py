@@ -1,54 +1,77 @@
+import asyncio
+
 from langgraph.checkpoint.memory import MemorySaver
 
-from app.config import is_postgres, settings
+from app.config import is_postgres, settings, to_psycopg_conninfo
 
 _checkpointer = None
-_pool = None
+_async_pool = None
+_setup_done = False
+
+
+async def init_checkpointer() -> None:
+    global _checkpointer, _async_pool, _setup_done
+    if _checkpointer is not None:
+        return
+    if is_postgres():
+        from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+        from psycopg_pool import AsyncConnectionPool
+
+        conninfo = to_psycopg_conninfo(settings.database_url)
+        _async_pool = AsyncConnectionPool(conninfo=conninfo, max_size=10)
+        await _async_pool.open()
+        _checkpointer = AsyncPostgresSaver(_async_pool)
+        if not _setup_done:
+            await _checkpointer.setup()
+            _setup_done = True
+    else:
+        _checkpointer = MemorySaver()
 
 
 def get_checkpointer():
-    global _checkpointer, _pool
+    global _checkpointer
     if _checkpointer is None:
         if is_postgres():
-            from langgraph.checkpoint.postgres import PostgresSaver
-            from psycopg_pool import ConnectionPool
-
-            _pool = ConnectionPool(conninfo=settings.database_url, max_size=10, open=True)
-            _checkpointer = PostgresSaver(_pool)
-            _checkpointer.setup()
-        else:
-            _checkpointer = MemorySaver()
+            raise RuntimeError(
+                "Postgres checkpointer not initialized; call init_checkpointer() first"
+            )
+        _checkpointer = MemorySaver()
     return _checkpointer
 
 
-def init_checkpointer() -> None:
-    get_checkpointer()
-
-
-def shutdown_checkpointer() -> None:
-    global _checkpointer, _pool
-    if _pool is not None:
-        _pool.close()
+async def shutdown_checkpointer() -> None:
+    global _checkpointer, _async_pool, _setup_done
+    if _async_pool is not None:
+        await _async_pool.close()
     _checkpointer = None
-    _pool = None
+    _async_pool = None
+    _setup_done = False
 
 
 def reset_checkpointer() -> None:
     """Drop checkpointer (for test isolation)."""
-    shutdown_checkpointer()
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(shutdown_checkpointer())
+        return
+    global _checkpointer, _async_pool, _setup_done
+    _checkpointer = None
+    _async_pool = None
+    _setup_done = False
 
 
-def ping_checkpointer() -> str:
+async def ping_checkpointer() -> str:
     """Return checkpointer status for health checks."""
     try:
         if not is_postgres():
-            get_checkpointer()
+            if _checkpointer is None:
+                await init_checkpointer()
             return "memory"
-        get_checkpointer()
-        if _pool is None:
+        if _checkpointer is None or _async_pool is None:
             return "not_initialized"
-        with _pool.connection() as conn:
-            conn.execute("SELECT 1")
+        async with _async_pool.connection() as conn:
+            await conn.execute("SELECT 1")
         return "ok"
     except Exception:
         return "error"

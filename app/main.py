@@ -37,7 +37,7 @@ async def lifespan(_: FastAPI):
     init_async_db()
     bootstrap_tools()
     init_cache()
-    init_checkpointer()
+    await init_checkpointer()
     warm_index()
     yield
     await dispose_async_db()

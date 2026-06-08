@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.4.1] — 2026-06-08
+
+### Fixed
+- Docker staging: `postgresql://` → `psycopg3` via `to_sync_database_url` / `to_psycopg_conninfo`
+- Postgres checkpointer: setup with autocommit; `AsyncPostgresSaver` for `ainvoke`
+- `service.py`: `aget_state` instead of sync `get_state` with async checkpointer
+
 ## [1.4.0] — 2026-06-08 — Phase 6: Production Hardening (start)
 
 ### Added

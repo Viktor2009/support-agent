@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.admin_routes import router as admin_router
@@ -21,7 +22,7 @@ from app.gdpr_routes import router as gdpr_router
 from app.health import build_health_payload
 from app.rate_limit import RateLimitMiddleware
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
-from app.service import resume_chat, run_chat
+from app.service import resume_chat, run_chat, stream_chat
 from app.tools import bootstrap_tools
 
 
@@ -82,6 +83,29 @@ def chat(
     if isinstance(result, dict) and result.get("status") == "awaiting_operator":
         return result
     return result
+
+
+@app.post("/chat/stream")
+def chat_stream(
+    request: ChatRequest,
+    auth: AuthContext | None = Depends(get_auth_context),
+):
+    customer_id = resolve_customer_id(auth, request.customer_id)
+    tenant_id = resolve_tenant_id(auth, request.tenant_id)
+    return StreamingResponse(
+        stream_chat(
+            session_id=request.session_id,
+            message=request.message,
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.post("/chat/resume", response_model=ChatResponse)

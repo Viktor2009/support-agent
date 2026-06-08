@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 from app.config import settings
 
 _buckets: dict[str, list[float]] = defaultdict(list)
-_LIMITED_PATHS = {"/chat", "/chat/resume", "/chat/feedback"}
+_LIMITED_PATHS = {"/chat", "/chat/stream", "/chat/resume", "/chat/feedback"}
 
 
 def reset_rate_limit() -> None:

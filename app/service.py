@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 from langchain_core.messages import HumanMessage
 from langgraph.types import Command
 
@@ -6,6 +8,8 @@ from app.graph.builder import build_graph
 from app.graph.state import SupportState
 from app.observability import graph_invoke_config
 from app.schemas import ChatResponse, Citation
+from app.sse import format_sse
+from app.tenant import DEFAULT_TENANT
 
 _graph = None
 
@@ -69,22 +73,16 @@ def _to_response(state: SupportState) -> ChatResponse:
     )
 
 
-def run_chat(
+def _build_input_state(
     session_id: str,
     message: str,
     customer_id: str | None,
     *,
     tenant_id: str | None = None,
-) -> ChatResponse | dict:
-    from app.tenant import DEFAULT_TENANT
-
-    graph = get_graph()
-    config = graph_invoke_config(session_id)
-    resolved_tenant = tenant_id or DEFAULT_TENANT
-
-    input_state: SupportState = {
+) -> SupportState:
+    return {
         "session_id": session_id,
-        "tenant_id": resolved_tenant,
+        "tenant_id": tenant_id or DEFAULT_TENANT,
         "customer_id": customer_id,
         "messages": [HumanMessage(content=message)],
         "dialog_summary": "",
@@ -104,15 +102,32 @@ def run_chat(
         "ticket_id": None,
     }
 
-    result = graph.invoke(input_state, config=config)
-    snapshot = graph.get_state(config)
 
-    if snapshot.tasks:
-        interrupt_payload = None
-        for task in snapshot.tasks:
-            if task.interrupts:
-                interrupt_payload = task.interrupts[0].value
-                break
+def _interrupt_payload(graph, config) -> dict | None:
+    snapshot = graph.get_state(config)
+    if not snapshot.tasks:
+        return None
+    for task in snapshot.tasks:
+        if task.interrupts:
+            return task.interrupts[0].value
+    return None
+
+
+def run_chat(
+    session_id: str,
+    message: str,
+    customer_id: str | None,
+    *,
+    tenant_id: str | None = None,
+) -> ChatResponse | dict:
+    graph = get_graph()
+    config = graph_invoke_config(session_id)
+    input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
+
+    result = graph.invoke(input_state, config=config)
+    interrupt_payload = _interrupt_payload(graph, config)
+    if interrupt_payload is not None:
+        snapshot = graph.get_state(config)
         return {
             "status": "awaiting_operator",
             "interrupt": interrupt_payload,
@@ -121,6 +136,62 @@ def run_chat(
         }
 
     return _to_response(result)
+
+
+def stream_chat(
+    session_id: str,
+    message: str,
+    customer_id: str | None,
+    *,
+    tenant_id: str | None = None,
+    token_chunk_size: int = 24,
+) -> Iterator[str]:
+    graph = get_graph()
+    config = graph_invoke_config(session_id)
+    input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
+    final_state: SupportState | None = None
+
+    for mode, chunk in graph.stream(
+        input_state,
+        config=config,
+        stream_mode=["updates", "values"],
+    ):
+        if mode == "updates":
+            for node_name, update in chunk.items():
+                if not update:
+                    continue
+                payload: dict = {"node": node_name}
+                for key in ("intent", "active_agent", "sentiment", "confidence"):
+                    if key in update:
+                        payload[key] = update[key]
+                yield format_sse("node", payload)
+        elif mode == "values":
+            final_state = chunk
+
+    interrupt_payload = _interrupt_payload(graph, config)
+    if interrupt_payload is not None:
+        snapshot = graph.get_state(config)
+        yield format_sse(
+            "interrupt",
+            {
+                "status": "awaiting_operator",
+                "interrupt": interrupt_payload,
+                "session_id": session_id,
+                "partial_state": snapshot.values,
+            },
+        )
+        return
+
+    if final_state is None:
+        yield format_sse("error", {"detail": "Graph produced no final state"})
+        return
+
+    answer = final_state.get("draft_answer", "")
+    for index in range(0, len(answer), token_chunk_size):
+        yield format_sse("token", {"text": answer[index : index + token_chunk_size]})
+
+    response = _to_response(final_state)
+    yield format_sse("done", response.model_dump())
 
 
 def resume_chat(session_id: str, operator_reply: str, ticket_id: str | None = None) -> ChatResponse:

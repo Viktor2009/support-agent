@@ -63,7 +63,27 @@ curl -X POST http://127.0.0.1:8000/chat/feedback `
 
 ```
 http://127.0.0.1:8000/widget/?customer_id=cust_456
+# SSE streaming по умолчанию; ?stream=0 — классический POST /chat
 ```
+
+## SSE streaming (v0.6.0)
+
+```powershell
+curl -N -X POST http://127.0.0.1:8000/chat/stream `
+  -H "Content-Type: application/json" `
+  -d '{"session_id":"s1","message":"Где мой заказ #1?","customer_id":"cust_456"}'
+```
+
+События: `node` (прогресс графа), `token` (чанки ответа), `done` (полный JSON), `interrupt` (HITL).
+
+## Load test
+
+```powershell
+.\scripts\dev.ps1 -Task run      # в отдельном терминале
+.\scripts\dev.ps1 -Task loadtest # 50 concurrent /chat
+```
+
+Runbook: [docs/RUNBOOK.md](docs/RUNBOOK.md)
 
 ## Новые intents (v0.3.0)
 
@@ -214,6 +234,8 @@ POST /chat
     → synthesize_answer
     → validate_answer
     → save_session
+
+POST /chat/stream — тот же граф, ответ через SSE (node → token → done)
 ```
 
 ## Структура

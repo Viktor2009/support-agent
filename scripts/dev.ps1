@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres", "staging", "eval")]
+    [ValidateSet("install", "test", "lint", "run", "migrate", "postgres", "staging", "eval", "loadtest")]
     [string]$Task = "run"
 )
 
@@ -36,5 +36,9 @@ switch ($Task) {
     "eval" {
         $env:MOCK_LLM = "true"
         .\.venv\Scripts\python.exe tests\eval\run_eval.py
+    }
+    "loadtest" {
+        $env:MOCK_LLM = "true"
+        .\.venv\Scripts\python.exe scripts\load_test.py --concurrency 50
     }
 }

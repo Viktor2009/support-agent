@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "0.5.0"
+    app_version: str = "0.6.0"
 
     # Cache / Redis (optional — empty = in-memory only)
     redis_url: str = ""

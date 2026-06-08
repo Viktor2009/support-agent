@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-06-08
+
+### Added
+- SSE streaming: `POST /chat/stream` (node progress, token chunks, done/interrupt events)
+- Widget uses streaming by default (`?stream=0` for classic `/chat`)
+- Load test script (`scripts/load_test.py`, `.\scripts\dev.ps1 -Task loadtest`)
+- Runbook: `docs/RUNBOOK.md`
+- 2 new streaming integration tests — 61 total
+
 ## [0.5.0] — 2026-06-08
 
 ### Added

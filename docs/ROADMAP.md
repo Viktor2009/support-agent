@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: 0.5.0
+> Зафиксирован: 2026-06-08 · Текущая версия API: 0.6.0
 
 ## Цели
 
@@ -50,7 +50,7 @@
 - [x] RAG: knowledge/ + search_knowledge node
 - [x] Zendesk integration при эскалации (mock + real API)
 - [x] Chat widget (MVP) — `/widget/`
-- [ ] WebSocket/SSE streaming (опционально)
+- [x] SSE streaming (`POST /chat/stream`, widget)
 
 ## Фаза 3 — Масштабирование (недели 9–14) `[DONE]`
 
@@ -108,7 +108,12 @@
 - [x] Feedback + admin API + admin UI
 - [x] Golden dataset eval (51 tests)
 
-## Sprint 6 — следующий
+## Sprint 6 — завершён (Production readiness)
+
+- [x] SSE streaming endpoint + widget
+- [x] Load test script (50 concurrent sessions)
+- [x] Runbook (`docs/RUNBOOK.md`)
+- [ ] Async API + asyncpg
 
 ## Definition of Done — Production v1.0
 

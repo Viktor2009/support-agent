@@ -204,7 +204,9 @@ async def stream_chat(
     yield format_sse("done", response.model_dump())
 
 
-async def resume_chat(session_id: str, operator_reply: str, ticket_id: str | None = None) -> ChatResponse:
+async def resume_chat(
+    session_id: str, operator_reply: str, ticket_id: str | None = None
+) -> ChatResponse:
     graph = get_graph()
     config = graph_invoke_config(session_id)
 

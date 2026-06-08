@@ -7,6 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.config import get_stream_writer
 
+from app.async_session_store import aload_session, asave_session
 from app.cached_db import get_cached_intent, set_cached_intent
 from app.config import settings
 from app.graph.state import SupportState
@@ -14,7 +15,6 @@ from app.integrations.zendesk import create_ticket
 from app.prompts import get_prompt
 from app.rag.retriever import search_knowledge
 from app.schemas import DialogContext, IntentResult, SupportAnswer, ValidationResult
-from app.async_session_store import aload_session, asave_session
 from app.tenant import DEFAULT_TENANT
 from app.tools.registry import arun_tool
 

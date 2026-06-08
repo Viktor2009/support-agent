@@ -103,7 +103,9 @@ async def alist_customer_orders(customer_id: str, *, tenant_id: str = DEFAULT_TE
     return data
 
 
-async def alist_customer_invoices(customer_id: str, *, tenant_id: str = DEFAULT_TENANT) -> list[dict]:
+async def alist_customer_invoices(
+    customer_id: str, *, tenant_id: str = DEFAULT_TENANT
+) -> list[dict]:
     session_maker = _session_factory()
     async with session_maker() as session:
         rows = (

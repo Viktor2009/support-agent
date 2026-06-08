@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-06-08
+
+### Changed
+- Ruff lint fixes (import order, line length, unused imports)
+- README intro and project structure updated to match v1.3.0
+
+### Removed
+- Legacy sync `app/session_store.py` (replaced by `async_session_store`)
+
 ## [1.3.0] — 2026-06-08
 
 ### Added

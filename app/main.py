@@ -23,11 +23,11 @@ from app.executor import run_sync
 from app.gdpr_routes import router as gdpr_router
 from app.health import build_health_payload
 from app.metrics import MetricsMiddleware, metrics_content_type, metrics_payload
+from app.rag.index import warm_index
 from app.rate_limit import RateLimitMiddleware
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
 from app.security import SecurityHeadersMiddleware
 from app.service import resume_chat, run_chat, stream_chat
-from app.rag.index import warm_index
 from app.tools import bootstrap_tools
 
 

@@ -1,6 +1,6 @@
 # Support Agent — FastAPI + LangGraph
 
-Минимальный support agent: **БД (SQLite) + живой диалог**, без RAG/файлов.
+Production-ready support agent на **FastAPI + LangGraph**: БД, RAG, HITL-эскалация, multi-tenant, SSE streaming, admin panel и Prometheus metrics.
 
 ## Быстрый старт
 
@@ -272,22 +272,31 @@ POST /chat/stream — тот же граф, ответ через SSE (node → 
 ```
 support-agent/
 ├── app/
-│   ├── main.py           # FastAPI endpoints
-│   ├── service.py        # invoke / resume graph
-│   ├── database.py       # SQLite: customers, orders
-│   ├── session_store.py  # SQLite: dialog memory
-│   ├── prompts/          # YAML prompt templates
+│   ├── main.py                 # FastAPI endpoints
+│   ├── service.py              # ainvoke / astream graph
+│   ├── database.py             # sync ORM (admin, GDPR, demo)
+│   ├── async_queries.py        # async DB queries for graph nodes
+│   ├── async_session_store.py  # async dialog memory
+│   ├── rag/                    # embedding + keyword retriever
+│   ├── tools/                  # plugin tools registry
+│   ├── prompts/                # YAML prompt templates
 │   └── graph/
 │       ├── state.py
 │       ├── nodes.py
+│       ├── supervisor.py
 │       └── builder.py
 ├── tests/
 │   ├── unit/
-│   └── integration/
+│   ├── integration/
+│   └── eval/                   # golden dataset
 ├── docs/
-│   └── ROADMAP.md
+│   ├── ROADMAP.md
+│   ├── RUNBOOK.md
+│   ├── OPERATOR.md
+│   └── SECURITY.md
 ├── scripts/
-│   └── dev.ps1
+│   ├── dev.ps1
+│   └── load_test.py
 ├── requirements.txt
 └── .env.example
 ```

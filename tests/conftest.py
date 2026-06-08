@@ -5,9 +5,9 @@ from app.cache import reset_cache
 from app.config import settings
 from app.database import configure_database
 from app.main import app
-from app.rag.loader import reset_chunks
 from app.metrics import reset_metrics
 from app.rag.index import reset_index
+from app.rag.loader import reset_chunks
 from app.rate_limit import reset_rate_limit
 from app.service import reset_all
 from app.tools import bootstrap_tools

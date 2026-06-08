@@ -52,7 +52,10 @@ def search_embedding(
     from app.rag.embeddings import embed_text
 
     if min_score is None:
-        min_score = settings.rag_min_score_openai if use_openai_embeddings() else settings.rag_min_score_mock
+        if use_openai_embeddings():
+            min_score = settings.rag_min_score_openai
+        else:
+            min_score = settings.rag_min_score_mock
 
     query_vector = embed_text(query)
     scored: list[tuple[float, dict]] = []

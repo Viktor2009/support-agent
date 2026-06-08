@@ -1,7 +1,7 @@
 from app.config import settings
 from app.rag.index import index_mode, reset_index, warm_index
 from app.rag.loader import reset_chunks
-from app.rag.retriever import resolve_rag_mode, search_embedding, search_knowledge, search_keyword
+from app.rag.retriever import resolve_rag_mode, search_embedding, search_keyword, search_knowledge
 from app.rag.vectors import cosine_similarity, mock_embedding
 
 

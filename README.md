@@ -83,7 +83,14 @@ curl -N -X POST http://127.0.0.1:8000/chat/stream `
 .\scripts\dev.ps1 -Task loadtest # 50 concurrent /chat
 ```
 
-Runbook: [docs/RUNBOOK.md](docs/RUNBOOK.md)
+Runbook: [docs/RUNBOOK.md](docs/RUNBOOK.md)  
+Operator guide: [docs/OPERATOR.md](docs/OPERATOR.md)  
+Security checklist: [docs/SECURITY.md](docs/SECURITY.md)
+
+## Async API (v0.7.0)
+
+Все эндпоинты — `async def`. LangGraph и sync SQLAlchemy выполняются в threadpool.  
+`/health` возвращает `database_async` (asyncpg / aiosqlite).
 
 ## Новые intents (v0.3.0)
 

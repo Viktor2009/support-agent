@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from app import database
+from app.async_database import ping_database_async
 from app.cache import cache_backend, ping_cache
 from app.checkpointer import ping_checkpointer
 from app.config import settings
@@ -15,8 +16,9 @@ def check_database() -> str:
         return "error"
 
 
-def build_health_payload() -> dict:
+async def build_health_payload() -> dict:
     db_status = check_database()
+    db_async = await ping_database_async()
     cp_status = ping_checkpointer()
     langfuse = (
         "configured"
@@ -25,13 +27,16 @@ def build_health_payload() -> dict:
     )
     overall = (
         "ok"
-        if db_status == "ok" and cp_status not in ("error", "not_initialized")
+        if db_status == "ok"
+        and db_async == "ok"
+        and cp_status not in ("error", "not_initialized")
         else "degraded"
     )
     return {
         "status": overall,
         "version": settings.app_version,
         "database": db_status,
+        "database_async": db_async,
         "checkpointer": cp_status,
         "cache": ping_cache() if settings.redis_url else cache_backend(),
         "langfuse": langfuse,

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import AuthContext, get_auth_context, resolve_customer_id, resolve_tenant_id
+from app.executor import run_sync
 from app.gdpr import delete_session_data, export_session_data
 from app.privacy import mask_payload
 
@@ -8,7 +9,7 @@ router = APIRouter(prefix="/gdpr", tags=["gdpr"])
 
 
 @router.get("/sessions/{session_id}/export")
-def export_session(
+async def export_session(
     session_id: str,
     auth: AuthContext | None = Depends(get_auth_context),
     customer_id: str | None = None,
@@ -17,7 +18,12 @@ def export_session(
     tenant_id = resolve_tenant_id(auth)
     resolved_customer = resolve_customer_id(auth, customer_id)
     try:
-        payload = export_session_data(session_id, tenant_id=tenant_id, customer_id=resolved_customer)
+        payload = await run_sync(
+            export_session_data,
+            session_id,
+            tenant_id=tenant_id,
+            customer_id=resolved_customer,
+        )
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     except LookupError as exc:
@@ -29,7 +35,7 @@ def export_session(
 
 
 @router.delete("/sessions/{session_id}")
-def delete_session(
+async def delete_session(
     session_id: str,
     auth: AuthContext | None = Depends(get_auth_context),
     customer_id: str | None = None,
@@ -37,7 +43,12 @@ def delete_session(
     tenant_id = resolve_tenant_id(auth)
     resolved_customer = resolve_customer_id(auth, customer_id)
     try:
-        delete_session_data(session_id, tenant_id=tenant_id, customer_id=resolved_customer)
+        await run_sync(
+            delete_session_data,
+            session_id,
+            tenant_id=tenant_id,
+            customer_id=resolved_customer,
+        )
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
     except LookupError as exc:

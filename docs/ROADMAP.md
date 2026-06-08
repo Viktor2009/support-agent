@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: 0.6.0
+> Зафиксирован: 2026-06-08 · Текущая версия API: 0.7.0
 
 ## Цели
 
@@ -59,7 +59,7 @@
 - [x] Eval pipeline (golden dataset, ≥85% intent accuracy)
 - [x] Feedback endpoint (`POST /chat/feedback`)
 - [x] Admin panel (`/admin-ui/`) + API (`/admin/api/*`)
-- [ ] Async API + asyncpg
+- [x] Async API + asyncpg/aiosqlite health ping
 
 ## Фаза 4 — Платформа (недели 15–24) `[DONE]`
 
@@ -113,7 +113,14 @@
 - [x] SSE streaming endpoint + widget
 - [x] Load test script (50 concurrent sessions)
 - [x] Runbook (`docs/RUNBOOK.md`)
-- [ ] Async API + asyncpg
+
+## Sprint 7 — завершён (Async + security)
+
+- [x] Async API endpoints (`async def` + threadpool для graph/DB)
+- [x] Async DB ping (`asyncpg` / `aiosqlite`, `database_async` в `/health`)
+- [x] Security headers middleware
+- [x] Operator onboarding (`docs/OPERATOR.md`)
+- [x] Security checklist (`docs/SECURITY.md`)
 
 ## Definition of Done — Production v1.0
 
@@ -122,5 +129,5 @@
 3. Load test: 50 concurrent sessions
 4. Runbook: деплой, откат, LLM down
 5. Golden dataset eval проходит пороги
-6. Security review пройден
-7. Документация API + onboarding оператора
+6. Security review пройден — см. [docs/SECURITY.md](SECURITY.md)
+7. Документация API + onboarding оператора — см. [docs/OPERATOR.md](OPERATOR.md)

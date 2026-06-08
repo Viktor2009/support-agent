@@ -101,6 +101,9 @@ def configure_database(url: str) -> None:
     settings.database_url = url
     reset_engine(url)
     init_db()
+    from app.async_database import reset_async_engine
+
+    reset_async_engine(url)
 
 
 def init_db() -> None:

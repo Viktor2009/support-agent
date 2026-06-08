@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "0.6.0"
+    app_version: str = "0.7.0"
 
     # Cache / Redis (optional — empty = in-memory only)
     redis_url: str = ""
@@ -45,6 +45,17 @@ settings = Settings()
 
 def is_postgres() -> bool:
     return settings.database_url.startswith("postgresql")
+
+
+def to_async_database_url(url: str) -> str:
+    """Convert sync SQLAlchemy URL to async driver URL."""
+    if url.startswith("sqlite:///"):
+        return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+    if url.startswith("postgresql+psycopg://"):
+        return url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
 
 
 def parse_api_keys(raw: str) -> dict[str, tuple[str, str]]:

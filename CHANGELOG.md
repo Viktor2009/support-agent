@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-06-08
+
+### Added
+- Async API: all route handlers are `async def`; blocking graph/DB via threadpool
+- Async DB layer (`asyncpg` for Postgres, `aiosqlite` for SQLite)
+- `/health` includes `database_async` status
+- Security headers middleware (`X-Request-ID`, `X-Content-Type-Options`, …)
+- Operator guide: `docs/OPERATOR.md`
+- Security checklist: `docs/SECURITY.md`
+- 4 new tests — 65 total
+
 ## [0.6.0] — 2026-06-08
 
 ### Added

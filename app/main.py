@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.admin_routes import router as admin_router
+from app.async_database import dispose_async_db, init_async_db
 from app.auth import AuthContext, get_auth_context, resolve_customer_id, resolve_tenant_id
 from app.cache import init_cache, shutdown_cache
 from app.checkpointer import init_checkpointer, shutdown_checkpointer
@@ -18,10 +19,12 @@ from app.database import (
     list_customer_orders,
     save_feedback,
 )
+from app.executor import run_sync
 from app.gdpr_routes import router as gdpr_router
 from app.health import build_health_payload
 from app.rate_limit import RateLimitMiddleware
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
+from app.security import SecurityHeadersMiddleware
 from app.service import resume_chat, run_chat, stream_chat
 from app.tools import bootstrap_tools
 
@@ -29,10 +32,12 @@ from app.tools import bootstrap_tools
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    init_async_db()
     bootstrap_tools()
     init_cache()
     init_checkpointer()
     yield
+    await dispose_async_db()
     shutdown_checkpointer()
     shutdown_cache()
 
@@ -44,6 +49,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -63,18 +69,19 @@ app.include_router(gdpr_router)
 
 
 @app.get("/health")
-def health():
-    return build_health_payload()
+async def health():
+    return await build_health_payload()
 
 
 @app.post("/chat", response_model=None)
-def chat(
+async def chat(
     request: ChatRequest,
     auth: AuthContext | None = Depends(get_auth_context),
 ):
     customer_id = resolve_customer_id(auth, request.customer_id)
     tenant_id = resolve_tenant_id(auth, request.tenant_id)
-    result = run_chat(
+    result = await run_sync(
+        run_chat,
         session_id=request.session_id,
         message=request.message,
         customer_id=customer_id,
@@ -86,7 +93,7 @@ def chat(
 
 
 @app.post("/chat/stream")
-def chat_stream(
+async def chat_stream(
     request: ChatRequest,
     auth: AuthContext | None = Depends(get_auth_context),
 ):
@@ -109,12 +116,13 @@ def chat_stream(
 
 
 @app.post("/chat/resume", response_model=ChatResponse)
-def chat_resume(
+async def chat_resume(
     request: ResumeRequest,
     _: AuthContext | None = Depends(get_auth_context),
 ):
     try:
-        return resume_chat(
+        return await run_sync(
+            resume_chat,
             session_id=request.session_id,
             operator_reply=request.operator_reply,
             ticket_id=request.ticket_id,
@@ -124,13 +132,14 @@ def chat_resume(
 
 
 @app.post("/chat/feedback", response_model=FeedbackResponse)
-def chat_feedback(
+async def chat_feedback(
     request: FeedbackRequest,
     auth: AuthContext | None = Depends(get_auth_context),
 ):
     customer_id = resolve_customer_id(auth, request.customer_id)
     tenant_id = resolve_tenant_id(auth, request.tenant_id)
-    result = save_feedback(
+    result = await run_sync(
+        save_feedback,
         session_id=request.session_id,
         rating=request.rating,
         customer_id=customer_id,
@@ -141,7 +150,7 @@ def chat_feedback(
 
 
 @app.get("/demo/orders/{order_id}")
-def demo_order(
+async def demo_order(
     order_id: int,
     customer_id: str | None = None,
     auth: AuthContext | None = Depends(get_auth_context),
@@ -151,14 +160,19 @@ def demo_order(
         tenant_id = auth.tenant_id
     else:
         tenant_id = "default"
-    data = get_order_status(order_id, customer_id, tenant_id=tenant_id)
+    data = await run_sync(
+        get_order_status,
+        order_id,
+        customer_id,
+        tenant_id=tenant_id,
+    )
     if not data:
         raise HTTPException(status_code=404, detail="Order not found")
     return data
 
 
 @app.get("/demo/customers/{customer_id}")
-def demo_customer(
+async def demo_customer(
     customer_id: str,
     auth: AuthContext | None = Depends(get_auth_context),
 ):
@@ -167,8 +181,8 @@ def demo_customer(
         tenant_id = auth.tenant_id
     else:
         tenant_id = "default"
-    data = get_account_info(customer_id, tenant_id=tenant_id)
+    data = await run_sync(get_account_info, customer_id, tenant_id=tenant_id)
     if not data:
         raise HTTPException(status_code=404, detail="Customer not found")
-    orders = list_customer_orders(customer_id, tenant_id=tenant_id)
+    orders = await run_sync(list_customer_orders, customer_id, tenant_id=tenant_id)
     return {"customer": data, "orders": orders}

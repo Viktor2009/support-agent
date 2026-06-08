@@ -7,6 +7,7 @@ from app.checkpointer import ping_checkpointer
 from app.config import settings
 from app.rag.index import index_mode, index_size
 from app.rag.retriever import resolve_rag_mode
+from app.session_cache import session_cache_enabled
 
 
 def check_database() -> str:
@@ -50,4 +51,5 @@ async def build_health_payload() -> dict:
             "chunks": index_size(),
         },
         "metrics": "enabled" if settings.metrics_enabled else "disabled",
+        "session_cache": "redis" if session_cache_enabled() else "disabled",
     }

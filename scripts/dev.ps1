@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "test", "lint", "coverage", "run", "migrate", "postgres", "staging", "smoke", "eval", "loadtest")]
+    [ValidateSet("install", "test", "lint", "coverage", "run", "migrate", "postgres", "staging", "smoke", "eval", "eval-real", "loadtest")]
     [string]$Task = "run"
 )
 
@@ -46,6 +46,10 @@ switch ($Task) {
     "eval" {
         $env:MOCK_LLM = "true"
         .\.venv\Scripts\python.exe tests\eval\run_eval.py
+    }
+    "eval-real" {
+        $env:MOCK_LLM = "false"
+        .\.venv\Scripts\python.exe tests\eval\run_eval.py --real-llm
     }
     "loadtest" {
         $env:MOCK_LLM = "true"

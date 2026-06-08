@@ -75,6 +75,13 @@ def cache_set(key: str, value: Any, ttl: int | None = None) -> None:
     _memory[key] = (time.time() + ttl, raw)
 
 
+def cache_delete(key: str) -> None:
+    if _redis_client is not None:
+        _redis_client.delete(key)
+        return
+    _memory.pop(key, None)
+
+
 def cache_delete_prefix(prefix: str) -> None:
     if _redis_client is not None:
         for key in _redis_client.scan_iter(f"{prefix}*"):

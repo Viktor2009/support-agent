@@ -56,15 +56,26 @@ curl -X POST http://127.0.0.1:8000/chat/feedback `
 ## Eval pipeline
 
 ```powershell
-.\scripts\dev.ps1 -Task eval
+.\scripts\dev.ps1 -Task eval        # mock LLM (CI)
+.\scripts\dev.ps1 -Task eval-real   # OpenAI, если OPENAI_API_KEY задан
 ```
 
 ## Chat widget
 
 ```
 http://127.0.0.1:8000/widget/?customer_id=cust_456
-# SSE streaming по умолчанию; ?stream=0 — классический POST /chat
+# SSE по умолчанию; ?stream=0 — POST /chat; ?transport=ws — WebSocket
+# Staging auth: ?api_key=staging-key-cust456
 ```
+
+## WebSocket (v1.6.0)
+
+```
+ws://127.0.0.1:8000/chat/ws?api_key=staging-key-cust456
+```
+
+Отправка JSON: `{"session_id":"s1","message":"...","customer_id":"cust_456"}`  
+События: `{"event":"token|node|done|interrupt|error","data":{...}}`
 
 ## SSE streaming (v0.6.0)
 

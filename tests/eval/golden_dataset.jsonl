@@ -6,3 +6,11 @@
 {"message": "Привет!", "customer_id": "cust_456", "expected_intent": "general"}
 {"message": "Хочу возврат, сервис ужасный!", "customer_id": "cust_456", "expected_intent": "complaint"}
 {"message": "ммм", "customer_id": "cust_456", "expected_intent": "unclear"}
+{"message": "Когда доставка заказа #2?", "customer_id": "cust_456", "expected_intent": "order_status"}
+{"message": "Статус заказа номер 3", "customer_id": "cust_789", "expected_intent": "order_status"}
+{"message": "Сколько стоит доставка?", "customer_id": "cust_456", "expected_intent": "faq"}
+{"message": "Как связаться с оператором?", "customer_id": "cust_456", "expected_intent": "faq"}
+{"message": "Какая гарантия на товар?", "customer_id": "cust_456", "expected_intent": "faq"}
+{"message": "Покажи мой баланс", "customer_id": "cust_456", "expected_intent": "account_info"}
+{"message": "Список неоплаченных счетов", "customer_id": "cust_456", "expected_intent": "billing"}
+{"message": "Спасибо за помощь", "customer_id": "cust_456", "expected_intent": "general"}

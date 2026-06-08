@@ -36,9 +36,7 @@ def resolve_tenant_id(auth: AuthContext | None, body_tenant_id: str | None = Non
     return body_tenant_id or DEFAULT_TENANT
 
 
-def get_auth_context(
-    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
-) -> AuthContext | None:
+def resolve_auth_from_api_key(x_api_key: str | None) -> AuthContext | None:
     keys = parse_api_keys(settings.api_keys)
     if not keys:
         return None
@@ -46,3 +44,9 @@ def get_auth_context(
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
     tenant_id, customer_id = keys[x_api_key]
     return AuthContext(tenant_id=tenant_id, customer_id=customer_id)
+
+
+def get_auth_context(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> AuthContext | None:
+    return resolve_auth_from_api_key(x_api_key)

@@ -140,14 +140,14 @@ async def run_chat(
     return _to_response(result)
 
 
-async def stream_chat(
+async def iter_chat_events(
     session_id: str,
     message: str,
     customer_id: str | None,
     *,
     tenant_id: str | None = None,
     token_chunk_size: int = 24,
-) -> AsyncIterator[str]:
+) -> AsyncIterator[tuple[str, dict]]:
     graph = get_graph()
     config = graph_invoke_config(session_id, stream_tokens=True)
     input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
@@ -162,7 +162,7 @@ async def stream_chat(
         if mode == "custom":
             if isinstance(chunk, dict) and chunk.get("type") == "token":
                 tokens_streamed = True
-                yield format_sse("token", {"text": chunk.get("text", "")})
+                yield "token", {"text": chunk.get("text", "")}
             continue
         if mode == "updates":
             for node_name, update in chunk.items():
@@ -172,7 +172,7 @@ async def stream_chat(
                 for key in ("intent", "active_agent", "sentiment", "confidence"):
                     if key in update:
                         payload[key] = update[key]
-                yield format_sse("node", payload)
+                yield "node", payload
         elif mode == "values":
             final_state = chunk
 
@@ -180,28 +180,43 @@ async def stream_chat(
     if interrupt_payload is not None:
         record_escalation()
         snapshot = await graph.aget_state(config)
-        yield format_sse(
-            "interrupt",
-            {
-                "status": "awaiting_operator",
-                "interrupt": interrupt_payload,
-                "session_id": session_id,
-                "partial_state": snapshot.values,
-            },
-        )
+        yield "interrupt", {
+            "status": "awaiting_operator",
+            "interrupt": interrupt_payload,
+            "session_id": session_id,
+            "partial_state": snapshot.values,
+        }
         return
 
     if final_state is None:
-        yield format_sse("error", {"detail": "Graph produced no final state"})
+        yield "error", {"detail": "Graph produced no final state"}
         return
 
     answer = final_state.get("draft_answer", "")
     if not tokens_streamed:
         for index in range(0, len(answer), token_chunk_size):
-            yield format_sse("token", {"text": answer[index : index + token_chunk_size]})
+            yield "token", {"text": answer[index : index + token_chunk_size]}
 
     response = _to_response(final_state)
-    yield format_sse("done", response.model_dump())
+    yield "done", response.model_dump()
+
+
+async def stream_chat(
+    session_id: str,
+    message: str,
+    customer_id: str | None,
+    *,
+    tenant_id: str | None = None,
+    token_chunk_size: int = 24,
+) -> AsyncIterator[str]:
+    async for event, data in iter_chat_events(
+        session_id,
+        message,
+        customer_id,
+        tenant_id=tenant_id,
+        token_chunk_size=token_chunk_size,
+    ):
+        yield format_sse(event, data)
 
 
 async def resume_chat(

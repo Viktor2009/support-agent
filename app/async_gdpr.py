@@ -1,6 +1,7 @@
 from sqlalchemy import delete, select
 
 from app import async_database
+from app.async_session_store import ainvalidate_session_cache
 from app.database import ChatSession, Feedback
 from app.tenant import DEFAULT_TENANT
 
@@ -76,6 +77,7 @@ async def adelete_session(session_id: str, *, tenant_id: str = DEFAULT_TENANT) -
             )
         )
         await session.commit()
+    await ainvalidate_session_cache(session_id, tenant_id=tenant_id)
 
 
 async def aexport_session_data(

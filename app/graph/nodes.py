@@ -86,7 +86,19 @@ def _mock_classify(message: str) -> IntentResult:
             return IntentResult(intent="complaint", sentiment="negative", order_id=order_id)
     if any(
         w in lower
-        for w in ("политик", "как оформить", "можно ли", "условия", "faq", "сколько дней")
+        for w in (
+            "политик",
+            "как оформить",
+            "можно ли",
+            "условия",
+            "faq",
+            "сколько дней",
+            "гарант",
+            "оператор",
+            "связаться",
+            "сколько стоит",
+            "часы работ",
+        )
     ):
         return IntentResult(intent="faq", sentiment="neutral", order_id=order_id)
     if any(w in lower for w in ("счёт", "счет", "оплат", "invoice", "платёж", "платеж", "счета")):

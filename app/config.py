@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "1.5.0"
+    app_version: str = "1.6.0"
 
     # RAG: auto | keyword | embedding
     rag_mode: str = "auto"
@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     redis_url: str = ""
     cache_ttl_seconds: int = 300
     intent_cache_ttl_seconds: int = 120
+    session_cache_ttl_seconds: int = 3600
 
     # Rate limiting (requests per minute per IP, 0 = disabled)
     rate_limit_per_minute: int = 60

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-06-08 — Phase 6 complete + Phase 7 Intelligence
+
+### Added
+- Redis session hot cache (`session_cache.py`) with Postgres as source of truth
+- WebSocket chat: `GET /chat/ws`, widget `?transport=ws&api_key=...`
+- Knowledge: `support_hours.md`, `warranty.md`
+- Golden dataset expanded to 16 cases; `run_eval.py --real-llm`
+- `dev.ps1 -Task eval-real`
+- 5 new tests — 93 total
+
+### Changed
+- `iter_chat_events` shared by SSE and WebSocket
+- `/health` → `session_cache` status
+- Mock intent classifier: FAQ keywords for warranty, operator, delivery cost
+
 ## [1.5.0] — 2026-06-08 — Phase 6: full async API
 
 ### Added

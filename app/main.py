@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +14,13 @@ from app.async_queries import (
     aget_order_status,
     alist_customer_orders,
 )
-from app.auth import AuthContext, get_auth_context, resolve_customer_id, resolve_tenant_id
+from app.auth import (
+    AuthContext,
+    get_auth_context,
+    resolve_auth_from_api_key,
+    resolve_customer_id,
+    resolve_tenant_id,
+)
 from app.cache import init_cache, shutdown_cache
 from app.checkpointer import init_checkpointer, shutdown_checkpointer
 from app.config import parse_cors_origins, settings
@@ -28,6 +34,7 @@ from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResp
 from app.security import SecurityHeadersMiddleware
 from app.service import resume_chat, run_chat, stream_chat
 from app.tools import bootstrap_tools
+from app.ws_chat import handle_chat_websocket
 
 
 @asynccontextmanager
@@ -99,6 +106,19 @@ async def chat(
     if isinstance(result, dict) and result.get("status") == "awaiting_operator":
         return result
     return result
+
+
+@app.websocket("/chat/ws")
+async def chat_websocket(
+    websocket: WebSocket,
+    api_key: str | None = Query(default=None),
+):
+    try:
+        auth = resolve_auth_from_api_key(api_key)
+    except HTTPException:
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+    await handle_chat_websocket(websocket, auth=auth)
 
 
 @app.post("/chat/stream")

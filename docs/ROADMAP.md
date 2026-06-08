@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.5.0**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.6.0**
 
 ## Цели
 
@@ -163,7 +163,7 @@
 
 ---
 
-## Фаза 6 — Production Hardening (недели 25–28) `[IN PROGRESS]`
+## Фаза 6 — Production Hardening (недели 25–28) `[DONE]`
 
 Цель: готовность к pilot-деплою на Postgres + Redis с закрытым security checklist.
 
@@ -175,8 +175,18 @@
 - [x] Staging smoke в CI (docker compose job)
 - [x] Async admin / GDPR / demo / feedback (без threadpool)
 - [x] TLS termination guide (`docs/TLS.md`)
-- [ ] Redis session store (вместо Postgres-only dialog memory)
-- [ ] WebSocket streaming для chat widget
+- [x] Redis session store (hot cache + Postgres source of truth)
+- [x] WebSocket streaming (`/chat/ws`, widget `?transport=ws`)
+
+---
+
+## Фаза 7 — Intelligence (недели 29–32) `[DONE]`
+
+- [x] Расширение knowledge base (`support_hours.md`, `warranty.md`)
+- [x] Golden dataset 16 кейсов (intent eval)
+- [x] Real LLM eval: `run_eval.py --real-llm`, `dev.ps1 -Task eval-real`
+- [ ] A/B eval dashboards (Langfuse)
+- [ ] Plugin SDK documentation
 
 ## Sprint 11 — завершён (Production Hardening)
 
@@ -184,6 +194,13 @@
 - [x] Dependabot + pip audit
 - [x] Staging env template + security checklist update
 - [x] Smoke test verified (local + Docker staging)
+
+## Sprint 13 — завершён (Redis sessions + WebSocket + Intelligence)
+
+- [x] Redis session cache (`session_cache.py`, TTL, invalidation on GDPR delete)
+- [x] WebSocket `/chat/ws` + widget `?transport=ws`
+- [x] Knowledge: `support_hours.md`, `warranty.md`
+- [x] Golden dataset 16 → eval; `--real-llm` mode
 
 ## Sprint 12 — завершён (Async platform + CI staging)
 

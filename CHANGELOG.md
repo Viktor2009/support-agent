@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-06-08
+
+### Added
+- Multi-tenant isolation (`tenant_id` on customers, orders, sessions, feedback)
+- API keys: `tenant:customer:api_key` (legacy `customer:api_key` → tenant `default`)
+- Supervisor node maps intent → agent (`active_agent` in chat response)
+- Plugin tools registry (`app/tools/registry.py`, `bootstrap_tools()` on startup)
+- GDPR endpoints: `GET /gdpr/sessions/{id}/export`, `DELETE /gdpr/sessions/{id}`
+- PII masking for GDPR export (`mask_email`, `mask_pii_text`)
+- Alembic migration `004_tenant_id`
+- ACME tenant seed data for isolation tests
+- 8 new tests — 59 total
+
 ## [0.4.0] — 2026-06-08
 
 ### Added

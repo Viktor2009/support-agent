@@ -8,6 +8,7 @@ from app.main import app
 from app.rag.loader import reset_chunks
 from app.rate_limit import reset_rate_limit
 from app.service import reset_all
+from app.tools import bootstrap_tools
 
 
 @pytest.fixture(autouse=True)
@@ -20,6 +21,7 @@ def isolated_env(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "rate_limit_per_minute", 0)
     db_file = (tmp_path / "support.db").as_posix()
     configure_database(f"sqlite:///{db_file}")
+    bootstrap_tools()
     reset_chunks()
     reset_cache()
     reset_rate_limit()

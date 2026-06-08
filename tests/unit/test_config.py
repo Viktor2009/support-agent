@@ -3,8 +3,13 @@ from app.observability import graph_invoke_config
 
 
 def test_parse_api_keys():
-    mapping = parse_api_keys("cust_456:key1,cust_789:key2")
-    assert mapping == {"key1": "cust_456", "key2": "cust_789"}
+    legacy = parse_api_keys("cust_456:key1,cust_789:key2")
+    assert legacy == {
+        "key1": ("default", "cust_456"),
+        "key2": ("default", "cust_789"),
+    }
+    tenant = parse_api_keys("acme:cust_acme:acme-key")
+    assert tenant == {"acme-key": ("acme", "cust_acme")}
 
 
 def test_parse_cors_origins_wildcard():

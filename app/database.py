@@ -8,6 +8,7 @@ from app.cached_db import (
     set_cached_orders_list,
 )
 from app.config import settings
+from app.tenant import DEFAULT_TENANT
 
 
 class Base(DeclarativeBase):
@@ -17,6 +18,7 @@ class Base(DeclarativeBase):
 class Customer(Base):
     __tablename__ = "customers"
 
+    tenant_id = Column(String, primary_key=True, default=DEFAULT_TENANT)
     customer_id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
@@ -28,6 +30,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     order_id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(String, nullable=False, default=DEFAULT_TENANT)
     customer_id = Column(String, nullable=False)
     status = Column(String, nullable=False)
     ship_date = Column(String, nullable=True)
@@ -39,6 +42,7 @@ class Invoice(Base):
     __tablename__ = "invoices"
 
     invoice_id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(String, nullable=False, default=DEFAULT_TENANT)
     customer_id = Column(String, nullable=False)
     order_id = Column(Integer, nullable=True)
     amount = Column(Float, nullable=False)
@@ -50,6 +54,7 @@ class ChatSession(Base):
     __tablename__ = "sessions"
 
     session_id = Column(String, primary_key=True)
+    tenant_id = Column(String, nullable=False, default=DEFAULT_TENANT)
     customer_id = Column(String, nullable=True)
     summary = Column(Text, default="")
     messages = Column(JSON, default=list)
@@ -62,6 +67,7 @@ class Feedback(Base):
     __tablename__ = "feedback"
 
     feedback_id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(String, nullable=False, default=DEFAULT_TENANT)
     session_id = Column(String, nullable=False)
     customer_id = Column(String, nullable=True)
     rating = Column(Integer, nullable=False)
@@ -104,6 +110,7 @@ def init_db() -> None:
             db.add_all(
                 [
                     Customer(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_456",
                         name="Иван Петров",
                         email="ivan@example.com",
@@ -111,17 +118,27 @@ def init_db() -> None:
                         balance=1200.0,
                     ),
                     Customer(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_789",
                         name="Мария Сидорова",
                         email="maria@example.com",
                         plan="basic",
                         balance=0.0,
                     ),
+                    Customer(
+                        tenant_id="acme",
+                        customer_id="cust_acme",
+                        name="ACME Corp",
+                        email="billing@acme.example",
+                        plan="enterprise",
+                        balance=5000.0,
+                    ),
                 ]
             )
             db.add_all(
                 [
                     Order(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_456",
                         status="shipped",
                         ship_date="2025-06-05",
@@ -129,6 +146,7 @@ def init_db() -> None:
                         total=4590.0,
                     ),
                     Order(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_456",
                         status="processing",
                         ship_date=None,
@@ -136,17 +154,27 @@ def init_db() -> None:
                         total=1290.0,
                     ),
                     Order(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_789",
                         status="delivered",
                         ship_date="2025-05-20",
                         delivery_date="2025-05-25",
                         total=890.0,
                     ),
+                    Order(
+                        tenant_id="acme",
+                        customer_id="cust_acme",
+                        status="shipped",
+                        ship_date="2025-06-01",
+                        delivery_date="2025-06-06",
+                        total=9900.0,
+                    ),
                 ]
             )
             db.add_all(
                 [
                     Invoice(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_456",
                         order_id=1,
                         amount=4590.0,
@@ -154,6 +182,7 @@ def init_db() -> None:
                         due_date="2025-06-01",
                     ),
                     Invoice(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_456",
                         order_id=2,
                         amount=1290.0,
@@ -161,11 +190,20 @@ def init_db() -> None:
                         due_date="2025-06-15",
                     ),
                     Invoice(
+                        tenant_id=DEFAULT_TENANT,
                         customer_id="cust_789",
                         order_id=3,
                         amount=890.0,
                         status="paid",
                         due_date="2025-05-18",
+                    ),
+                    Invoice(
+                        tenant_id="acme",
+                        customer_id="cust_acme",
+                        order_id=4,
+                        amount=9900.0,
+                        status="paid",
+                        due_date="2025-06-01",
                     ),
                 ]
             )
@@ -176,13 +214,63 @@ def get_db() -> Session:
     return SessionLocal()
 
 
-def get_order_status(order_id: int, customer_id: str | None) -> dict | None:
-    cached = get_cached_order(order_id, customer_id)
+def get_session(session_id: str, *, tenant_id: str = DEFAULT_TENANT) -> dict | None:
+    with SessionLocal() as db:
+        row = (
+            db.query(ChatSession)
+            .filter(
+                ChatSession.session_id == session_id,
+                ChatSession.tenant_id == tenant_id,
+            )
+            .first()
+        )
+        if not row:
+            return None
+        return {
+            "session_id": row.session_id,
+            "tenant_id": row.tenant_id,
+            "customer_id": row.customer_id,
+            "summary": row.summary or "",
+            "messages": row.messages or [],
+            "status": row.status,
+            "ticket_id": row.ticket_id,
+        }
+
+
+def delete_session(session_id: str, *, tenant_id: str = DEFAULT_TENANT) -> None:
+    with SessionLocal() as db:
+        db.query(Feedback).filter(
+            Feedback.session_id == session_id,
+            Feedback.tenant_id == tenant_id,
+        ).delete()
+        row = (
+            db.query(ChatSession)
+            .filter(
+                ChatSession.session_id == session_id,
+                ChatSession.tenant_id == tenant_id,
+            )
+            .first()
+        )
+        if row:
+            db.delete(row)
+        db.commit()
+
+
+def get_order_status(
+    order_id: int,
+    customer_id: str | None,
+    *,
+    tenant_id: str = DEFAULT_TENANT,
+) -> dict | None:
+    cached = get_cached_order(order_id, customer_id, tenant_id)
     if cached is not None:
         return cached
 
     with SessionLocal() as db:
-        query = db.query(Order).filter(Order.order_id == order_id)
+        query = db.query(Order).filter(
+            Order.order_id == order_id,
+            Order.tenant_id == tenant_id,
+        )
         if customer_id:
             query = query.filter(Order.customer_id == customer_id)
         row = query.first()
@@ -190,22 +278,31 @@ def get_order_status(order_id: int, customer_id: str | None) -> dict | None:
             return None
         data = {
             "order_id": row.order_id,
+            "tenant_id": row.tenant_id,
             "customer_id": row.customer_id,
             "status": row.status,
             "ship_date": row.ship_date,
             "delivery_date": row.delivery_date,
             "total": row.total,
         }
-        set_cached_order(order_id, customer_id, data)
+        set_cached_order(order_id, customer_id, data, tenant_id)
         return data
 
 
-def get_account_info(customer_id: str) -> dict | None:
+def get_account_info(customer_id: str, *, tenant_id: str = DEFAULT_TENANT) -> dict | None:
     with SessionLocal() as db:
-        row = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+        row = (
+            db.query(Customer)
+            .filter(
+                Customer.customer_id == customer_id,
+                Customer.tenant_id == tenant_id,
+            )
+            .first()
+        )
         if not row:
             return None
         return {
+            "tenant_id": row.tenant_id,
             "customer_id": row.customer_id,
             "name": row.name,
             "email": row.email,
@@ -214,13 +311,20 @@ def get_account_info(customer_id: str) -> dict | None:
         }
 
 
-def list_customer_orders(customer_id: str) -> list[dict]:
-    cached = get_cached_orders_list(customer_id)
+def list_customer_orders(customer_id: str, *, tenant_id: str = DEFAULT_TENANT) -> list[dict]:
+    cached = get_cached_orders_list(customer_id, tenant_id)
     if cached is not None:
         return cached
 
     with SessionLocal() as db:
-        rows = db.query(Order).filter(Order.customer_id == customer_id).all()
+        rows = (
+            db.query(Order)
+            .filter(
+                Order.customer_id == customer_id,
+                Order.tenant_id == tenant_id,
+            )
+            .all()
+        )
         data = [
             {
                 "order_id": r.order_id,
@@ -231,13 +335,20 @@ def list_customer_orders(customer_id: str) -> list[dict]:
             }
             for r in rows
         ]
-    set_cached_orders_list(customer_id, data)
+    set_cached_orders_list(customer_id, data, tenant_id)
     return data
 
 
-def list_customer_invoices(customer_id: str) -> list[dict]:
+def list_customer_invoices(customer_id: str, *, tenant_id: str = DEFAULT_TENANT) -> list[dict]:
     with SessionLocal() as db:
-        rows = db.query(Invoice).filter(Invoice.customer_id == customer_id).all()
+        rows = (
+            db.query(Invoice)
+            .filter(
+                Invoice.customer_id == customer_id,
+                Invoice.tenant_id == tenant_id,
+            )
+            .all()
+        )
         return [
             {
                 "invoice_id": r.invoice_id,
@@ -255,9 +366,12 @@ def save_feedback(
     rating: int,
     customer_id: str | None = None,
     comment: str | None = None,
+    *,
+    tenant_id: str = DEFAULT_TENANT,
 ) -> dict:
     with SessionLocal() as db:
         row = Feedback(
+            tenant_id=tenant_id,
             session_id=session_id,
             customer_id=customer_id,
             rating=rating,
@@ -273,9 +387,16 @@ def save_feedback(
         }
 
 
-def list_feedback(limit: int = 50) -> list[dict]:
+def list_feedback_for_session(session_id: str, *, tenant_id: str = DEFAULT_TENANT) -> list[dict]:
     with SessionLocal() as db:
-        rows = db.query(Feedback).order_by(Feedback.created_at.desc()).limit(limit).all()
+        rows = (
+            db.query(Feedback)
+            .filter(
+                Feedback.session_id == session_id,
+                Feedback.tenant_id == tenant_id,
+            )
+            .all()
+        )
         return [
             {
                 "feedback_id": r.feedback_id,
@@ -288,15 +409,42 @@ def list_feedback(limit: int = 50) -> list[dict]:
         ]
 
 
-def list_sessions(status: str | None = None, limit: int = 50) -> list[dict]:
+def list_feedback(limit: int = 50, *, tenant_id: str | None = None) -> list[dict]:
+    with SessionLocal() as db:
+        query = db.query(Feedback)
+        if tenant_id:
+            query = query.filter(Feedback.tenant_id == tenant_id)
+        rows = query.order_by(Feedback.created_at.desc()).limit(limit).all()
+        return [
+            {
+                "feedback_id": r.feedback_id,
+                "tenant_id": r.tenant_id,
+                "session_id": r.session_id,
+                "customer_id": r.customer_id,
+                "rating": r.rating,
+                "comment": r.comment,
+            }
+            for r in rows
+        ]
+
+
+def list_sessions(
+    status: str | None = None,
+    limit: int = 50,
+    *,
+    tenant_id: str | None = None,
+) -> list[dict]:
     with SessionLocal() as db:
         query = db.query(ChatSession)
+        if tenant_id:
+            query = query.filter(ChatSession.tenant_id == tenant_id)
         if status:
             query = query.filter(ChatSession.status == status)
         rows = query.order_by(ChatSession.updated_at.desc()).limit(limit).all()
         return [
             {
                 "session_id": r.session_id,
+                "tenant_id": r.tenant_id,
                 "customer_id": r.customer_id,
                 "status": r.status,
                 "summary": r.summary,
@@ -307,12 +455,17 @@ def list_sessions(status: str | None = None, limit: int = 50) -> list[dict]:
         ]
 
 
-def get_analytics_stats() -> dict:
+def get_analytics_stats(*, tenant_id: str | None = None) -> dict:
     with SessionLocal() as db:
-        total_sessions = db.query(ChatSession).count()
-        awaiting = db.query(ChatSession).filter(ChatSession.status == "awaiting_operator").count()
-        closed = db.query(ChatSession).filter(ChatSession.status == "closed").count()
-        feedback_rows = db.query(Feedback).all()
+        session_query = db.query(ChatSession)
+        feedback_query = db.query(Feedback)
+        if tenant_id:
+            session_query = session_query.filter(ChatSession.tenant_id == tenant_id)
+            feedback_query = feedback_query.filter(Feedback.tenant_id == tenant_id)
+        total_sessions = session_query.count()
+        awaiting = session_query.filter(ChatSession.status == "awaiting_operator").count()
+        closed = session_query.filter(ChatSession.status == "closed").count()
+        feedback_rows = feedback_query.all()
         avg_rating = None
         if feedback_rows:
             avg_rating = round(sum(r.rating for r in feedback_rows) / len(feedback_rows), 2)

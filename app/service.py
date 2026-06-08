@@ -60,6 +60,8 @@ def _to_response(state: SupportState) -> ChatResponse:
         intent=state.get("intent"),
         sentiment=state.get("sentiment"),
         confidence=state.get("confidence"),
+        active_agent=state.get("active_agent"),
+        tenant_id=state.get("tenant_id"),
         citations=citations,
         escalated=state.get("escalated", False),
         escalation_reason=state.get("escalation_reason"),
@@ -67,12 +69,22 @@ def _to_response(state: SupportState) -> ChatResponse:
     )
 
 
-def run_chat(session_id: str, message: str, customer_id: str | None) -> ChatResponse | dict:
+def run_chat(
+    session_id: str,
+    message: str,
+    customer_id: str | None,
+    *,
+    tenant_id: str | None = None,
+) -> ChatResponse | dict:
+    from app.tenant import DEFAULT_TENANT
+
     graph = get_graph()
     config = graph_invoke_config(session_id)
+    resolved_tenant = tenant_id or DEFAULT_TENANT
 
     input_state: SupportState = {
         "session_id": session_id,
+        "tenant_id": resolved_tenant,
         "customer_id": customer_id,
         "messages": [HumanMessage(content=message)],
         "dialog_summary": "",
@@ -84,6 +96,7 @@ def run_chat(session_id: str, message: str, customer_id: str | None) -> ChatResp
         "escalated": False,
         "needs_interrupt": False,
         "intent": None,
+        "active_agent": None,
         "sentiment": None,
         "extracted_order_id": None,
         "confidence": None,

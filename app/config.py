@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "0.4.0"
+    app_version: str = "0.5.0"
 
     # Cache / Redis (optional — empty = in-memory only)
     redis_url: str = ""
@@ -47,18 +47,22 @@ def is_postgres() -> bool:
     return settings.database_url.startswith("postgresql")
 
 
-def parse_api_keys(raw: str) -> dict[str, str]:
-    """Map api_key -> customer_id."""
-    mapping: dict[str, str] = {}
+def parse_api_keys(raw: str) -> dict[str, tuple[str, str]]:
+    """Map api_key -> (tenant_id, customer_id)."""
+    mapping: dict[str, tuple[str, str]] = {}
     for part in raw.split(","):
         part = part.strip()
         if not part or ":" not in part:
             continue
-        customer_id, api_key = part.split(":", 1)
-        customer_id = customer_id.strip()
-        api_key = api_key.strip()
-        if customer_id and api_key:
-            mapping[api_key] = customer_id
+        segments = [segment.strip() for segment in part.split(":") if segment.strip()]
+        if len(segments) == 2:
+            tenant_id, customer_id, api_key = "default", segments[0], segments[1]
+        elif len(segments) >= 3:
+            tenant_id, customer_id, api_key = segments[0], segments[1], segments[2]
+        else:
+            continue
+        if tenant_id and customer_id and api_key:
+            mapping[api_key] = (tenant_id, customer_id)
     return mapping
 
 

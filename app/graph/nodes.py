@@ -6,18 +6,14 @@ from langchain_openai import ChatOpenAI
 
 from app.cached_db import get_cached_intent, set_cached_intent
 from app.config import settings
-from app.database import (
-    get_account_info,
-    get_order_status,
-    list_customer_invoices,
-    list_customer_orders,
-)
 from app.graph.state import SupportState
 from app.integrations.zendesk import create_ticket
 from app.prompts import get_prompt
 from app.rag.retriever import search_knowledge
 from app.schemas import DialogContext, IntentResult, SupportAnswer, ValidationResult
 from app.session_store import load_session, save_session
+from app.tenant import DEFAULT_TENANT
+from app.tools.registry import run_tool
 
 
 def _get_llm() -> ChatOpenAI:
@@ -68,9 +64,11 @@ def _mock_classify(message: str) -> IntentResult:
 
 
 def load_session_node(state: SupportState) -> dict:
-    stored = load_session(state["session_id"])
+    tenant_id = state.get("tenant_id") or DEFAULT_TENANT
+    stored = load_session(state["session_id"], tenant_id=tenant_id)
     customer_id = state.get("customer_id") or stored["customer_id"]
     return {
+        "tenant_id": tenant_id,
         "dialog_summary": stored["summary"],
         "customer_id": customer_id,
     }
@@ -118,11 +116,17 @@ def check_escalation(state: SupportState) -> dict:
 def query_db(state: SupportState) -> dict:
     intent = state["intent"]
     customer_id = state.get("customer_id")
+    tenant_id = state.get("tenant_id") or DEFAULT_TENANT
     order_id = state.get("extracted_order_id")
     evidence: list[dict] = []
 
     if intent == "order_status" and order_id:
-        data = get_order_status(order_id, customer_id)
+        data = run_tool(
+            "get_order_status",
+            order_id=order_id,
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+        )
         if data:
             evidence.append(
                 {
@@ -134,7 +138,11 @@ def query_db(state: SupportState) -> dict:
             )
 
     elif intent == "order_list" and customer_id:
-        orders = list_customer_orders(customer_id)
+        orders = run_tool(
+            "list_customer_orders",
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+        )
         if orders:
             evidence.append(
                 {
@@ -146,7 +154,11 @@ def query_db(state: SupportState) -> dict:
             )
 
     elif intent == "billing" and customer_id:
-        invoices = list_customer_invoices(customer_id)
+        invoices = run_tool(
+            "list_customer_invoices",
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+        )
         if invoices:
             evidence.append(
                 {
@@ -158,7 +170,11 @@ def query_db(state: SupportState) -> dict:
             )
 
     elif intent == "account_info" and customer_id:
-        data = get_account_info(customer_id)
+        data = run_tool(
+            "get_account_info",
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+        )
         if data:
             evidence.append(
                 {
@@ -168,7 +184,11 @@ def query_db(state: SupportState) -> dict:
                     "data": data,
                 }
             )
-        orders = list_customer_orders(customer_id)
+        orders = run_tool(
+            "list_customer_orders",
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+        )
         if orders:
             evidence.append(
                 {
@@ -220,7 +240,12 @@ def resolve_from_dialog(state: SupportState) -> dict:
         order_id = ctx.order_id
         inferred_from = ctx.inferred_from
 
-    data = get_order_status(order_id, state.get("customer_id"))
+    data = run_tool(
+        "get_order_status",
+        order_id=order_id,
+        customer_id=state.get("customer_id"),
+        tenant_id=state.get("tenant_id") or DEFAULT_TENANT,
+    )
     if not data:
         return {}
 
@@ -402,7 +427,8 @@ def escalate(state: SupportState) -> dict:
 
 
 def save_session_node(state: SupportState) -> dict:
-    stored = load_session(state["session_id"])
+    tenant_id = state.get("tenant_id") or DEFAULT_TENANT
+    stored = load_session(state["session_id"], tenant_id=tenant_id)
     messages = list(stored["messages"])
     messages.append({"role": "user", "content": _last_user_message(state)})
     if state.get("draft_answer"):
@@ -427,6 +453,7 @@ def save_session_node(state: SupportState) -> dict:
         customer_id=state.get("customer_id"),
         summary=summary,
         messages=messages[-20:],
+        tenant_id=tenant_id,
         status=status,
         ticket_id=state.get("ticket_id"),
     )

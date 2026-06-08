@@ -91,8 +91,27 @@ docker compose -f docker-compose.staging.yml up --build
 X-API-Key: your-key
 ```
 
-Формат `.env`: `API_KEYS=cust_456:key-for-456,cust_789:key-for-789`  
-`customer_id` берётся из ключа — передавать в body необязательно.
+Формат `.env`:
+- Legacy: `API_KEYS=cust_456:key-for-456` (tenant = `default`)
+- Multi-tenant: `API_KEYS=default:cust_456:key1,acme:cust_acme:key2`
+
+`customer_id` и `tenant_id` берутся из ключа — передавать в body необязательно.
+
+## Multi-tenant (v0.5.0)
+
+Ответ `/chat` включает `tenant_id` и `active_agent` (supervisor: orders/billing/knowledge/general).
+
+Демо-тенант `acme` с `cust_acme` и заказом #4 — для проверки изоляции.
+
+## GDPR
+
+```powershell
+# Экспорт сессии (PII маскируется по умолчанию)
+curl "http://127.0.0.1:8000/gdpr/sessions/s1/export?customer_id=cust_456"
+
+# Удаление сессии и связанного feedback
+curl -X DELETE "http://127.0.0.1:8000/gdpr/sessions/s1?customer_id=cust_456"
+```
 
 ## PostgreSQL (production-like)
 
@@ -131,6 +150,7 @@ ruff check app tests
 | cust_456 | 1 | shipped (delivery 2025-06-10) |
 | cust_456 | 2 | processing |
 | cust_789 | 3 | delivered |
+| acme / cust_acme | 4 | shipped (tenant isolation demo) |
 
 ## Примеры запросов
 
@@ -186,10 +206,12 @@ curl -X POST http://127.0.0.1:8000/chat/resume `
 
 ```
 POST /chat
-    → load_session (SQLite sessions)
+    → load_session
     → classify_intent
+    → supervisor (intent → agent)
     → check_escalation
-    → query_db / clarify / escalate / synthesize
+    → query_db (tools registry) / search_knowledge / clarify / escalate
+    → synthesize_answer
     → validate_answer
     → save_session
 ```

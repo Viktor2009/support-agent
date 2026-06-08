@@ -3,6 +3,7 @@ from langgraph.graph import END, START, StateGraph
 from app.checkpointer import get_checkpointer
 from app.graph import nodes
 from app.graph.state import SupportState
+from app.graph.supervisor import supervisor_node
 
 DB_INTENTS = ("order_status", "order_list", "billing", "account_info")
 
@@ -35,6 +36,7 @@ def build_graph():
 
     graph.add_node("load_session", nodes.load_session_node)
     graph.add_node("classify_intent", nodes.classify_intent)
+    graph.add_node("supervisor", supervisor_node)
     graph.add_node("check_escalation", nodes.check_escalation)
     graph.add_node("query_db", nodes.query_db)
     graph.add_node("search_knowledge", nodes.search_knowledge_node)
@@ -47,7 +49,8 @@ def build_graph():
 
     graph.add_edge(START, "load_session")
     graph.add_edge("load_session", "classify_intent")
-    graph.add_edge("classify_intent", "check_escalation")
+    graph.add_edge("classify_intent", "supervisor")
+    graph.add_edge("supervisor", "check_escalation")
     graph.add_conditional_edges("check_escalation", route_after_escalation_check)
 
     graph.add_edge("query_db", "resolve_from_dialog")

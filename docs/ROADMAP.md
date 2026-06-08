@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: 0.1.0
+> Зафиксирован: 2026-06-08 · Текущая версия API: 0.5.0
 
 ## Цели
 
@@ -52,7 +52,7 @@
 - [x] Chat widget (MVP) — `/widget/`
 - [ ] WebSocket/SSE streaming (опционально)
 
-## Фаза 3 — Масштабирование (недели 9–14) `[IN PROGRESS]`
+## Фаза 3 — Масштабирование (недели 9–14) `[DONE]`
 
 - [x] Redis cache (optional) + in-memory fallback
 - [x] Rate limiting (per IP)
@@ -61,12 +61,12 @@
 - [x] Admin panel (`/admin-ui/`) + API (`/admin/api/*`)
 - [ ] Async API + asyncpg
 
-## Фаза 4 — Платформа (недели 15–24)
+## Фаза 4 — Платформа (недели 15–24) `[DONE]`
 
-- [ ] Multi-tenant
-- [ ] Multi-agent (supervisor pattern)
-- [ ] Plugin tools registry
-- [ ] GDPR: delete/export sessions, PII masking
+- [x] Multi-tenant (`tenant_id`, API key format `tenant:customer:key`)
+- [x] Multi-agent supervisor (`active_agent` in response)
+- [x] Plugin tools registry
+- [x] GDPR: delete/export sessions, PII masking
 
 ---
 

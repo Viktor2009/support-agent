@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.admin_routes import router as admin_router
-from app.auth import AuthContext, get_auth_context, resolve_customer_id
+from app.auth import AuthContext, get_auth_context, resolve_customer_id, resolve_tenant_id
 from app.cache import init_cache, shutdown_cache
 from app.checkpointer import init_checkpointer, shutdown_checkpointer
 from app.config import parse_cors_origins, settings
@@ -17,15 +17,18 @@ from app.database import (
     list_customer_orders,
     save_feedback,
 )
+from app.gdpr_routes import router as gdpr_router
 from app.health import build_health_payload
 from app.rate_limit import RateLimitMiddleware
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
 from app.service import resume_chat, run_chat
+from app.tools import bootstrap_tools
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
+    bootstrap_tools()
     init_cache()
     init_checkpointer()
     yield
@@ -55,6 +58,7 @@ for mount_path, folder in (("/widget", "widget"), ("/admin-ui", "admin")):
         app.mount(mount_path, StaticFiles(directory=directory, html=True), name=folder)
 
 app.include_router(admin_router)
+app.include_router(gdpr_router)
 
 
 @app.get("/health")
@@ -68,10 +72,12 @@ def chat(
     auth: AuthContext | None = Depends(get_auth_context),
 ):
     customer_id = resolve_customer_id(auth, request.customer_id)
+    tenant_id = resolve_tenant_id(auth, request.tenant_id)
     result = run_chat(
         session_id=request.session_id,
         message=request.message,
         customer_id=customer_id,
+        tenant_id=tenant_id,
     )
     if isinstance(result, dict) and result.get("status") == "awaiting_operator":
         return result
@@ -99,11 +105,13 @@ def chat_feedback(
     auth: AuthContext | None = Depends(get_auth_context),
 ):
     customer_id = resolve_customer_id(auth, request.customer_id)
+    tenant_id = resolve_tenant_id(auth, request.tenant_id)
     result = save_feedback(
         session_id=request.session_id,
         rating=request.rating,
         customer_id=customer_id,
         comment=request.comment,
+        tenant_id=tenant_id,
     )
     return FeedbackResponse(**result)
 
@@ -116,7 +124,10 @@ def demo_order(
 ):
     if auth is not None:
         customer_id = auth.customer_id
-    data = get_order_status(order_id, customer_id)
+        tenant_id = auth.tenant_id
+    else:
+        tenant_id = "default"
+    data = get_order_status(order_id, customer_id, tenant_id=tenant_id)
     if not data:
         raise HTTPException(status_code=404, detail="Order not found")
     return data
@@ -129,8 +140,11 @@ def demo_customer(
 ):
     if auth is not None:
         customer_id = auth.customer_id
-    data = get_account_info(customer_id)
+        tenant_id = auth.tenant_id
+    else:
+        tenant_id = "default"
+    data = get_account_info(customer_id, tenant_id=tenant_id)
     if not data:
         raise HTTPException(status_code=404, detail="Customer not found")
-    orders = list_customer_orders(customer_id)
+    orders = list_customer_orders(customer_id, tenant_id=tenant_id)
     return {"customer": data, "orders": orders}

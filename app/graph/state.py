@@ -20,10 +20,12 @@ class SupportState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
     session_id: str
+    tenant_id: Optional[str]
     customer_id: Optional[str]
     dialog_summary: str
 
     intent: Optional[IntentType]
+    active_agent: Optional[str]
     sentiment: Optional[Literal["positive", "neutral", "negative"]]
     extracted_order_id: Optional[int]
 

@@ -7,6 +7,7 @@ class ChatRequest(BaseModel):
     session_id: str = Field(..., examples=["session-abc123"])
     message: str = Field(..., examples=["Где мой заказ #1?"])
     customer_id: Optional[str] = Field(None, examples=["cust_456"])
+    tenant_id: Optional[str] = Field(None, examples=["default"])
 
 
 class Citation(BaseModel):
@@ -19,6 +20,8 @@ class ChatResponse(BaseModel):
     intent: Optional[str] = None
     sentiment: Optional[str] = None
     confidence: Optional[str] = None
+    active_agent: Optional[str] = None
+    tenant_id: Optional[str] = None
     citations: list[Citation] = Field(default_factory=list)
     escalated: bool = False
     escalation_reason: Optional[str] = None
@@ -29,6 +32,7 @@ class FeedbackRequest(BaseModel):
     session_id: str
     rating: int = Field(..., ge=1, le=5)
     customer_id: Optional[str] = None
+    tenant_id: Optional[str] = None
     comment: Optional[str] = None
 
 

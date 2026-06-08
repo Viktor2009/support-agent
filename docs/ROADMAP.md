@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.0.0**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.1.0**
 
 ## Цели
 
@@ -131,3 +131,19 @@
 5. Golden dataset eval проходит пороги — **CI step + `dev.ps1 -Task eval`**
 6. Security review пройден — см. [docs/SECURITY.md](SECURITY.md)
 7. Документация API + onboarding оператора — см. [docs/OPERATOR.md](OPERATOR.md)
+
+---
+
+## Фаза 5 — Intelligence (post-v1.0)
+
+- [x] RAG v2: embedding index + hybrid fallback (`rag_mode`, mock/OpenAI embeddings)
+- [ ] Real LLM token streaming in `synthesize_answer`
+- [ ] Prometheus metrics endpoint
+- [ ] Full async SQLAlchemy in graph nodes
+
+## Sprint 8 — завершён (RAG v2)
+
+- [x] Vector index (`app/rag/index.py`, `app/rag/embeddings.py`)
+- [x] Hybrid retriever: embedding → keyword fallback
+- [x] `/health` → `rag.mode`, `rag.chunks`
+- [x] Mock embeddings for offline/tests

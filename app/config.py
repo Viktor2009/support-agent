@@ -20,7 +20,14 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "1.0.0"
+    app_version: str = "1.1.0"
+
+    # RAG: auto | keyword | embedding
+    rag_mode: str = "auto"
+    rag_use_mock_embeddings: bool = True
+    embedding_model: str = "text-embedding-3-small"
+    rag_min_score_mock: float = 0.05
+    rag_min_score_openai: float = 0.35
 
     # Cache / Redis (optional — empty = in-memory only)
     redis_url: str = ""

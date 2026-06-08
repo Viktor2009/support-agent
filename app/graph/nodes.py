@@ -304,7 +304,8 @@ def _mock_synthesize(state: SupportState, evidence: list[dict]) -> dict:
         return {"draft_answer": answer, "confidence": "high", "gaps": []}
 
     if evidence and intent == "faq":
-        hit = state.get("rag_evidence", [{}])[0]
+        hits = state.get("rag_evidence", [])
+        hit = max(hits, key=lambda item: item.get("score", 0)) if hits else {}
         text = hit.get("text", "")
         title = hit.get("title", "FAQ")
         return {

@@ -26,6 +26,7 @@ from app.rate_limit import RateLimitMiddleware
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
 from app.security import SecurityHeadersMiddleware
 from app.service import resume_chat, run_chat, stream_chat
+from app.rag.index import warm_index
 from app.tools import bootstrap_tools
 
 
@@ -36,6 +37,7 @@ async def lifespan(_: FastAPI):
     bootstrap_tools()
     init_cache()
     init_checkpointer()
+    warm_index()
     yield
     await dispose_async_db()
     shutdown_checkpointer()

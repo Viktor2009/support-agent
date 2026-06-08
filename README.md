@@ -100,7 +100,19 @@ Security checklist: [docs/SECURITY.md](docs/SECURITY.md)
 | `billing` | «Какие у меня счета?» |
 | `faq` | «Какая политика возврата?» |
 
-FAQ отвечает из `knowledge/faq.md` (RAG keyword search).
+FAQ отвечает из `knowledge/faq.md` (hybrid RAG: embeddings + keyword fallback).
+
+## RAG v2 (v1.1.0)
+
+По умолчанию `RAG_MODE=auto`: mock-embeddings при `MOCK_LLM=true`, OpenAI embeddings в production.
+
+```env
+RAG_MODE=auto          # auto | keyword | embedding
+RAG_USE_MOCK_EMBEDDINGS=true
+EMBEDDING_MODEL=text-embedding-3-small
+```
+
+`/health` → `rag.mode`, `rag.chunks`.
 
 ## Staging (Docker)
 

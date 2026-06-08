@@ -5,6 +5,8 @@ from app.async_database import ping_database_async
 from app.cache import cache_backend, ping_cache
 from app.checkpointer import ping_checkpointer
 from app.config import settings
+from app.rag.index import index_mode, index_size
+from app.rag.retriever import resolve_rag_mode
 
 
 def check_database() -> str:
@@ -42,4 +44,9 @@ async def build_health_payload() -> dict:
         "langfuse": langfuse,
         "auth": "enabled" if settings.api_keys.strip() else "disabled",
         "rate_limit": settings.rate_limit_per_minute or "disabled",
+        "rag": {
+            "mode": resolve_rag_mode(),
+            "index": index_mode(),
+            "chunks": index_size(),
+        },
     }

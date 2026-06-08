@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-06-08
+
+### Added
+- RAG v2: embedding-based retrieval with hybrid keyword fallback
+- Mock embeddings for offline/tests; OpenAI `text-embedding-3-small` when API key set
+- Config: `RAG_MODE`, `RAG_USE_MOCK_EMBEDDINGS`, `EMBEDDING_MODEL`
+- `/health` includes `rag` (mode, index type, chunk count)
+- Hits include `retrieval_method` (`embedding` | `keyword`)
+- 8 new RAG unit tests — 76 total
+
 ## [1.0.0] — 2026-06-08 — Production v1.0
 
 ### Added

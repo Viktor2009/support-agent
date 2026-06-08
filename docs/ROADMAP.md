@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.2.0**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.3.0**
 
 ## Цели
 
@@ -139,7 +139,14 @@
 - [x] RAG v2: embedding index + hybrid fallback (`rag_mode`, mock/OpenAI embeddings)
 - [x] Real LLM token streaming in `synthesize_answer` (LangGraph custom stream)
 - [x] Prometheus metrics endpoint (`/metrics`)
-- [ ] Full async SQLAlchemy in graph nodes
+- [x] Full async SQLAlchemy in graph nodes
+
+## Sprint 10 — завершён (Async graph + DB)
+
+- [x] `async_queries` / `async_session_store` (aiosqlite / asyncpg)
+- [x] Async tools registry + `arun_tool`
+- [x] Async graph nodes; `ainvoke` / `astream` in service layer
+- [x] Chat endpoints await graph directly (no threadpool for LangGraph)
 
 ## Sprint 9 — завершён (Observability + live tokens)
 

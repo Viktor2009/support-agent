@@ -1,3 +1,5 @@
+import asyncio
+
 from langchain_core.messages import HumanMessage
 
 from app.graph import nodes
@@ -98,14 +100,14 @@ def test_check_escalation_neutral_order():
 
 def test_query_db_order_status():
     state = _state("заказ #1", intent="order_status", extracted_order_id=1)
-    result = nodes.query_db(state)
+    result = asyncio.run(nodes.query_db(state))
     assert len(result["db_evidence"]) == 1
     assert result["db_evidence"][0]["data"]["status"] == "shipped"
 
 
 def test_query_db_account_info():
     state = _state("баланс", intent="account_info")
-    result = nodes.query_db(state)
+    result = asyncio.run(nodes.query_db(state))
     assert any(e["source_id"] == "customers" for e in result["db_evidence"])
     assert any(e["source_id"] == "orders" for e in result["db_evidence"])
 
@@ -116,7 +118,7 @@ def test_resolve_from_dialog_summary():
         intent="order_status",
         dialog_summary="вопрос по заказу #1",
     )
-    result = nodes.resolve_from_dialog(state)
+    result = asyncio.run(nodes.resolve_from_dialog(state))
     assert result["db_evidence"]
     assert result["db_evidence"][0]["data"]["order_id"] == 1
 

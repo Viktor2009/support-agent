@@ -1,7 +1,9 @@
+import asyncio
+
 from app.graph.supervisor import supervisor_node
 from app.privacy import mask_email, mask_pii_text, mask_payload
 from app.tools import bootstrap_tools
-from app.tools.registry import list_tools, run_tool
+from app.tools.registry import arun_tool, list_tools
 
 
 def test_supervisor_maps_intent_to_agent():
@@ -19,7 +21,9 @@ def test_tools_registry_bootstrap(isolated_env):
     bootstrap_tools()
     names = list_tools()
     assert "get_order_status" in names
-    data = run_tool("get_order_status", order_id=1, customer_id="cust_456", tenant_id="default")
+    data = asyncio.run(
+        arun_tool("get_order_status", order_id=1, customer_id="cust_456", tenant_id="default")
+    )
     assert data["status"] == "shipped"
 
 

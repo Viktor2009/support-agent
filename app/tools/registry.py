@@ -1,3 +1,4 @@
+import inspect
 from collections.abc import Callable
 from typing import Any
 
@@ -23,3 +24,13 @@ def run_tool(name: str, **kwargs: Any) -> Any:
     if tool is None:
         raise KeyError(f"Tool '{name}' is not registered")
     return tool(**kwargs)
+
+
+async def arun_tool(name: str, **kwargs: Any) -> Any:
+    tool = get_tool(name)
+    if tool is None:
+        raise KeyError(f"Tool '{name}' is not registered")
+    result = tool(**kwargs)
+    if inspect.isawaitable(result):
+        return await result
+    return result

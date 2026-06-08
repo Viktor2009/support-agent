@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-06-08
+
+### Added
+- Async SQLAlchemy layer for graph DB access: `app/async_queries.py`, `app/async_session_store.py`
+- `arun_tool` in tools registry; async tools registered at bootstrap
+- Graph nodes `load_session`, `query_db`, `resolve_from_dialog`, `save_session` are `async def`
+- `run_chat` / `stream_chat` / `resume_chat` use `graph.ainvoke` / `graph.astream` (no threadpool for graph)
+- 3 new async query/session unit tests — 83 total
+
 ## [1.2.0] — 2026-06-08
 
 ### Added

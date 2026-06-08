@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 
 from langchain_core.messages import HumanMessage
 from langgraph.types import Command
@@ -6,7 +6,7 @@ from langgraph.types import Command
 from app.checkpointer import reset_checkpointer
 from app.graph.builder import build_graph
 from app.graph.state import SupportState
-from app.metrics import MetricsMiddleware, record_escalation
+from app.metrics import record_escalation
 from app.observability import graph_invoke_config
 from app.schemas import ChatResponse, Citation
 from app.sse import format_sse
@@ -114,7 +114,7 @@ def _interrupt_payload(graph, config) -> dict | None:
     return None
 
 
-def run_chat(
+async def run_chat(
     session_id: str,
     message: str,
     customer_id: str | None,
@@ -125,7 +125,7 @@ def run_chat(
     config = graph_invoke_config(session_id)
     input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
 
-    result = graph.invoke(input_state, config=config)
+    result = await graph.ainvoke(input_state, config=config)
     interrupt_payload = _interrupt_payload(graph, config)
     if interrupt_payload is not None:
         record_escalation()
@@ -140,21 +140,21 @@ def run_chat(
     return _to_response(result)
 
 
-def stream_chat(
+async def stream_chat(
     session_id: str,
     message: str,
     customer_id: str | None,
     *,
     tenant_id: str | None = None,
     token_chunk_size: int = 24,
-) -> Iterator[str]:
+) -> AsyncIterator[str]:
     graph = get_graph()
     config = graph_invoke_config(session_id, stream_tokens=True)
     input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
     final_state: SupportState | None = None
     tokens_streamed = False
 
-    for mode, chunk in graph.stream(
+    async for mode, chunk in graph.astream(
         input_state,
         config=config,
         stream_mode=["updates", "values", "custom"],
@@ -204,11 +204,11 @@ def stream_chat(
     yield format_sse("done", response.model_dump())
 
 
-def resume_chat(session_id: str, operator_reply: str, ticket_id: str | None = None) -> ChatResponse:
+async def resume_chat(session_id: str, operator_reply: str, ticket_id: str | None = None) -> ChatResponse:
     graph = get_graph()
     config = graph_invoke_config(session_id)
 
-    result = graph.invoke(
+    result = await graph.ainvoke(
         Command(resume={"operator_reply": operator_reply, "ticket_id": ticket_id}),
         config=config,
     )

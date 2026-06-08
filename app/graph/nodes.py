@@ -14,9 +14,9 @@ from app.integrations.zendesk import create_ticket
 from app.prompts import get_prompt
 from app.rag.retriever import search_knowledge
 from app.schemas import DialogContext, IntentResult, SupportAnswer, ValidationResult
-from app.session_store import load_session, save_session
+from app.async_session_store import aload_session, asave_session
 from app.tenant import DEFAULT_TENANT
-from app.tools.registry import run_tool
+from app.tools.registry import arun_tool
 
 
 def _emit_answer_tokens(text: str, chunk_size: int = 16) -> None:
@@ -102,9 +102,9 @@ def _mock_classify(message: str) -> IntentResult:
     return IntentResult(intent="unclear", sentiment="neutral", order_id=order_id)
 
 
-def load_session_node(state: SupportState) -> dict:
+async def load_session_node(state: SupportState) -> dict:
     tenant_id = state.get("tenant_id") or DEFAULT_TENANT
-    stored = load_session(state["session_id"], tenant_id=tenant_id)
+    stored = await aload_session(state["session_id"], tenant_id=tenant_id)
     customer_id = state.get("customer_id") or stored["customer_id"]
     return {
         "tenant_id": tenant_id,
@@ -152,7 +152,7 @@ def check_escalation(state: SupportState) -> dict:
     return {"escalated": False, "needs_interrupt": False}
 
 
-def query_db(state: SupportState) -> dict:
+async def query_db(state: SupportState) -> dict:
     intent = state["intent"]
     customer_id = state.get("customer_id")
     tenant_id = state.get("tenant_id") or DEFAULT_TENANT
@@ -160,7 +160,7 @@ def query_db(state: SupportState) -> dict:
     evidence: list[dict] = []
 
     if intent == "order_status" and order_id:
-        data = run_tool(
+        data = await arun_tool(
             "get_order_status",
             order_id=order_id,
             customer_id=customer_id,
@@ -177,7 +177,7 @@ def query_db(state: SupportState) -> dict:
             )
 
     elif intent == "order_list" and customer_id:
-        orders = run_tool(
+        orders = await arun_tool(
             "list_customer_orders",
             customer_id=customer_id,
             tenant_id=tenant_id,
@@ -193,7 +193,7 @@ def query_db(state: SupportState) -> dict:
             )
 
     elif intent == "billing" and customer_id:
-        invoices = run_tool(
+        invoices = await arun_tool(
             "list_customer_invoices",
             customer_id=customer_id,
             tenant_id=tenant_id,
@@ -209,7 +209,7 @@ def query_db(state: SupportState) -> dict:
             )
 
     elif intent == "account_info" and customer_id:
-        data = run_tool(
+        data = await arun_tool(
             "get_account_info",
             customer_id=customer_id,
             tenant_id=tenant_id,
@@ -223,7 +223,7 @@ def query_db(state: SupportState) -> dict:
                     "data": data,
                 }
             )
-        orders = run_tool(
+        orders = await arun_tool(
             "list_customer_orders",
             customer_id=customer_id,
             tenant_id=tenant_id,
@@ -254,7 +254,7 @@ def search_knowledge_node(state: SupportState) -> dict:
     return {"rag_evidence": hits, "citations": citations}
 
 
-def resolve_from_dialog(state: SupportState) -> dict:
+async def resolve_from_dialog(state: SupportState) -> dict:
     if state.get("db_evidence") or state["intent"] != "order_status":
         return {}
 
@@ -279,7 +279,7 @@ def resolve_from_dialog(state: SupportState) -> dict:
         order_id = ctx.order_id
         inferred_from = ctx.inferred_from
 
-    data = run_tool(
+    data = await arun_tool(
         "get_order_status",
         order_id=order_id,
         customer_id=state.get("customer_id"),
@@ -473,9 +473,9 @@ def escalate(state: SupportState) -> dict:
     }
 
 
-def save_session_node(state: SupportState) -> dict:
+async def save_session_node(state: SupportState) -> dict:
     tenant_id = state.get("tenant_id") or DEFAULT_TENANT
-    stored = load_session(state["session_id"], tenant_id=tenant_id)
+    stored = await aload_session(state["session_id"], tenant_id=tenant_id)
     messages = list(stored["messages"])
     messages.append({"role": "user", "content": _last_user_message(state)})
     if state.get("draft_answer"):
@@ -495,7 +495,7 @@ def save_session_node(state: SupportState) -> dict:
     if state.get("escalated") and not state.get("needs_interrupt"):
         status = "closed"
 
-    save_session(
+    await asave_session(
         session_id=state["session_id"],
         customer_id=state.get("customer_id"),
         summary=summary,

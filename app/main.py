@@ -91,8 +91,7 @@ async def chat(
 ):
     customer_id = resolve_customer_id(auth, request.customer_id)
     tenant_id = resolve_tenant_id(auth, request.tenant_id)
-    result = await run_sync(
-        run_chat,
+    result = await run_chat(
         session_id=request.session_id,
         message=request.message,
         customer_id=customer_id,
@@ -132,8 +131,7 @@ async def chat_resume(
     _: AuthContext | None = Depends(get_auth_context),
 ):
     try:
-        return await run_sync(
-            resume_chat,
+        return await resume_chat(
             session_id=request.session_id,
             operator_reply=request.operator_reply,
             ticket_id=request.ticket_id,

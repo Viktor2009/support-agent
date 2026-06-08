@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.admin_routes import router as admin_router
@@ -22,6 +22,7 @@ from app.database import (
 from app.executor import run_sync
 from app.gdpr_routes import router as gdpr_router
 from app.health import build_health_payload
+from app.metrics import MetricsMiddleware, metrics_content_type, metrics_payload
 from app.rate_limit import RateLimitMiddleware
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest, FeedbackResponse, ResumeRequest
 from app.security import SecurityHeadersMiddleware
@@ -52,6 +53,7 @@ app = FastAPI(
 )
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(MetricsMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -73,6 +75,13 @@ app.include_router(gdpr_router)
 @app.get("/health")
 async def health():
     return await build_health_payload()
+
+
+@app.get("/metrics")
+async def metrics():
+    if not settings.metrics_enabled:
+        raise HTTPException(status_code=404, detail="Metrics disabled")
+    return Response(content=metrics_payload(), media_type=metrics_content_type())
 
 
 @app.post("/chat", response_model=None)

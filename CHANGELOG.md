@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-06-08
+
+### Added
+- Live LLM token streaming in `/chat/stream` (LangGraph `custom` events from `synthesize_answer`)
+- Prometheus `/metrics`: requests, escalations, latency histogram
+- `MetricsMiddleware` on chat endpoints; `METRICS_ENABLED` config
+- `/health` → `metrics` status
+- 4 new tests — 80 total
+
 ## [1.1.0] — 2026-06-08
 
 ### Added

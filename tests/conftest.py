@@ -6,6 +6,7 @@ from app.config import settings
 from app.database import configure_database
 from app.main import app
 from app.rag.loader import reset_chunks
+from app.metrics import reset_metrics
 from app.rag.index import reset_index
 from app.rate_limit import reset_rate_limit
 from app.service import reset_all
@@ -25,6 +26,7 @@ def isolated_env(tmp_path, monkeypatch):
     bootstrap_tools()
     reset_chunks()
     reset_index()
+    reset_metrics()
     reset_cache()
     reset_rate_limit()
     reset_all()

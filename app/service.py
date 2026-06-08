@@ -6,6 +6,7 @@ from langgraph.types import Command
 from app.checkpointer import reset_checkpointer
 from app.graph.builder import build_graph
 from app.graph.state import SupportState
+from app.metrics import MetricsMiddleware, record_escalation
 from app.observability import graph_invoke_config
 from app.schemas import ChatResponse, Citation
 from app.sse import format_sse
@@ -127,6 +128,7 @@ def run_chat(
     result = graph.invoke(input_state, config=config)
     interrupt_payload = _interrupt_payload(graph, config)
     if interrupt_payload is not None:
+        record_escalation()
         snapshot = graph.get_state(config)
         return {
             "status": "awaiting_operator",
@@ -147,15 +149,21 @@ def stream_chat(
     token_chunk_size: int = 24,
 ) -> Iterator[str]:
     graph = get_graph()
-    config = graph_invoke_config(session_id)
+    config = graph_invoke_config(session_id, stream_tokens=True)
     input_state = _build_input_state(session_id, message, customer_id, tenant_id=tenant_id)
     final_state: SupportState | None = None
+    tokens_streamed = False
 
     for mode, chunk in graph.stream(
         input_state,
         config=config,
-        stream_mode=["updates", "values"],
+        stream_mode=["updates", "values", "custom"],
     ):
+        if mode == "custom":
+            if isinstance(chunk, dict) and chunk.get("type") == "token":
+                tokens_streamed = True
+                yield format_sse("token", {"text": chunk.get("text", "")})
+            continue
         if mode == "updates":
             for node_name, update in chunk.items():
                 if not update:
@@ -170,6 +178,7 @@ def stream_chat(
 
     interrupt_payload = _interrupt_payload(graph, config)
     if interrupt_payload is not None:
+        record_escalation()
         snapshot = graph.get_state(config)
         yield format_sse(
             "interrupt",
@@ -187,8 +196,9 @@ def stream_chat(
         return
 
     answer = final_state.get("draft_answer", "")
-    for index in range(0, len(answer), token_chunk_size):
-        yield format_sse("token", {"text": answer[index : index + token_chunk_size]})
+    if not tokens_streamed:
+        for index in range(0, len(answer), token_chunk_size):
+            yield format_sse("token", {"text": answer[index : index + token_chunk_size]})
 
     response = _to_response(final_state)
     yield format_sse("done", response.model_dump())

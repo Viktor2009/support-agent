@@ -49,4 +49,5 @@ async def build_health_payload() -> dict:
             "index": index_mode(),
             "chunks": index_size(),
         },
+        "metrics": "enabled" if settings.metrics_enabled else "disabled",
     }

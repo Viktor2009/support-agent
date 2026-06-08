@@ -1,8 +1,11 @@
 import json
 import re
+from typing import Any
 
 from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
+from langgraph.config import get_stream_writer
 
 from app.cached_db import get_cached_intent, set_cached_intent
 from app.config import settings
@@ -14,6 +17,42 @@ from app.schemas import DialogContext, IntentResult, SupportAnswer, ValidationRe
 from app.session_store import load_session, save_session
 from app.tenant import DEFAULT_TENANT
 from app.tools.registry import run_tool
+
+
+def _emit_answer_tokens(text: str, chunk_size: int = 16) -> None:
+    try:
+        writer = get_stream_writer()
+    except Exception:
+        return
+    for index in range(0, len(text), chunk_size):
+        writer({"type": "token", "text": text[index : index + chunk_size]})
+
+
+def _stream_tokens_enabled(config: RunnableConfig | None) -> bool:
+    if not config:
+        return False
+    configurable: dict[str, Any] = config.get("configurable", {})
+    return bool(configurable.get("stream_tokens"))
+
+
+def _stream_llm_synthesize(state: SupportState, evidence: list[dict], last_msg: str) -> dict:
+    llm = _get_llm()
+    prompt = get_prompt(
+        "synthesize_answer_stream",
+        message=last_msg,
+        dialog_summary=state["dialog_summary"],
+        evidence=json.dumps(evidence, ensure_ascii=False),
+    )
+    pieces: list[str] = []
+    writer = get_stream_writer()
+    for chunk in llm.stream(prompt):
+        token = chunk.content if isinstance(chunk.content, str) else str(chunk.content)
+        if not token:
+            continue
+        pieces.append(token)
+        writer({"type": "token", "text": token})
+    answer = "".join(pieces).strip()
+    return {"draft_answer": answer, "confidence": "medium", "gaps": []}
 
 
 def _get_llm() -> ChatOpenAI:
@@ -331,12 +370,19 @@ def _mock_synthesize(state: SupportState, evidence: list[dict]) -> dict:
     }
 
 
-def synthesize_answer(state: SupportState) -> dict:
+def synthesize_answer(state: SupportState, config: RunnableConfig | None = None) -> dict:
     last_msg = _last_user_message(state)
     evidence = _all_evidence(state)
+    stream_tokens = _stream_tokens_enabled(config)
 
     if settings.mock_llm or not settings.openai_api_key:
-        return _mock_synthesize(state, evidence)
+        result = _mock_synthesize(state, evidence)
+        if stream_tokens:
+            _emit_answer_tokens(result["draft_answer"])
+        return result
+
+    if stream_tokens:
+        return _stream_llm_synthesize(state, evidence, last_msg)
 
     llm = _get_llm()
     result = llm.with_structured_output(SupportAnswer).invoke(

@@ -45,6 +45,24 @@ def test_chat_stream_returns_sse(client):
     assert tokens == done["answer"]
 
 
+def test_chat_stream_emits_live_tokens(client):
+    """Stream path emits token events (custom stream from synthesize_answer)."""
+    response = client.post(
+        "/chat/stream",
+        json={
+            "session_id": "stream-live",
+            "message": "Где мой заказ #1?",
+            "customer_id": "cust_456",
+        },
+    )
+    events = _parse_sse_events(response.text)
+    assert any(
+        name == "node" and payload.get("node") == "synthesize_answer"
+        for name, payload in events
+    )
+    assert any(name == "token" for name, _ in events)
+
+
 def test_chat_stream_escalation_interrupt(client):
     response = client.post(
         "/chat/stream",

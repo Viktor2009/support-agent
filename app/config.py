@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    app_version: str = "1.1.0"
+    app_version: str = "1.2.0"
 
     # RAG: auto | keyword | embedding
     rag_mode: str = "auto"
@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     zendesk_email: str = ""
     zendesk_api_token: str = ""
     zendesk_mock: bool = True
+
+    # Prometheus /metrics (set false to disable endpoint)
+    metrics_enabled: bool = True
 
 
 settings = Settings()

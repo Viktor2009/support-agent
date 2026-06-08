@@ -19,8 +19,13 @@ def get_langfuse_handler(session_id: str | None = None) -> BaseCallbackHandler |
     )
 
 
-def graph_invoke_config(session_id: str) -> dict:
-    config: dict = {"configurable": {"thread_id": session_id}}
+def graph_invoke_config(session_id: str, *, stream_tokens: bool = False) -> dict:
+    config: dict = {
+        "configurable": {
+            "thread_id": session_id,
+            "stream_tokens": stream_tokens,
+        }
+    }
     handler = get_langfuse_handler(session_id)
     if handler is not None:
         config["callbacks"] = [handler]

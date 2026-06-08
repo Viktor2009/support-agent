@@ -34,6 +34,14 @@ synthesize_answer: |
 
   Не выдумывай статусы, даты, суммы.
 
+synthesize_answer_stream: |
+  Ты support-агент. Ответь клиенту кратко и по делу, ТОЛЬКО на основе evidence.
+  Пиши plain text без JSON и без markdown-заголовков.
+
+  Вопрос: {message}
+  Контекст: {dialog_summary}
+  Evidence: {evidence}
+
 validate_answer: |
   Проверь grounding ответа.
 

@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.1.0**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.2.0**
 
 ## Цели
 
@@ -137,9 +137,15 @@
 ## Фаза 5 — Intelligence (post-v1.0)
 
 - [x] RAG v2: embedding index + hybrid fallback (`rag_mode`, mock/OpenAI embeddings)
-- [ ] Real LLM token streaming in `synthesize_answer`
-- [ ] Prometheus metrics endpoint
+- [x] Real LLM token streaming in `synthesize_answer` (LangGraph custom stream)
+- [x] Prometheus metrics endpoint (`/metrics`)
 - [ ] Full async SQLAlchemy in graph nodes
+
+## Sprint 9 — завершён (Observability + live tokens)
+
+- [x] LLM token streaming via `get_stream_writer` + SSE `custom` events
+- [x] Prometheus: `support_chat_requests_total`, `support_chat_escalations_total`, latency histogram
+- [x] `MetricsMiddleware` on chat endpoints
 
 ## Sprint 8 — завершён (RAG v2)
 

@@ -74,7 +74,15 @@ curl -N -X POST http://127.0.0.1:8000/chat/stream `
   -d '{"session_id":"s1","message":"Где мой заказ #1?","customer_id":"cust_456"}'
 ```
 
-События: `node` (прогресс графа), `token` (чанки ответа), `done` (полный JSON), `interrupt` (HITL).
+События: `node` (прогресс графа), `token` (live из `synthesize_answer` или чанки), `done`, `interrupt`.
+
+## Metrics (v1.2.0)
+
+```
+GET /metrics   # Prometheus format (METRICS_ENABLED=true)
+```
+
+Счётчики: `support_chat_requests_total`, `support_chat_escalations_total`, histogram `support_chat_duration_seconds`.
 
 ## Load test
 

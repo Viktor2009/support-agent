@@ -23,7 +23,7 @@
 
 ## Dependencies
 
-- [ ] `pip audit` / Dependabot
+- [x] `pip audit` / Dependabot (CI job `audit` + `.github/dependabot.yml`)
 - [ ] Postgres: отдельный user с минимальными правами
 - [ ] Redis (если используется): auth + network isolation
 
@@ -33,11 +33,39 @@
 - [ ] Langfuse / logs: не писать полные API keys
 - [ ] `MOCK_LLM=false` только в production с валидным ключом
 
+---
+
+## Staging profile (`docker-compose.staging.yml`)
+
+При запуске `docker compose -f docker-compose.staging.yml up` следующие пункты **закрыты**:
+
+| Проверка | Статус | Как |
+|----------|--------|-----|
+| API_KEYS | ✅ | `cust_456:staging-key-cust456` |
+| ADMIN_API_KEY | ✅ | `staging-admin-key` |
+| CORS restricted | ✅ | whitelist localhost:3000 |
+| Rate limiting | ✅ | `RATE_LIMIT_PER_MINUTE=60` |
+| Postgres | ✅ | отдельный контейнер, не SQLite |
+| Redis cache | ✅ | `REDIS_URL` в compose |
+| Dependabot | ✅ | `.github/dependabot.yml` |
+| pip audit | ✅ | CI job `audit` |
+| Secrets not in git | ✅ | только `.env.example` / `.env.staging.example` |
+
+Smoke test после деплоя staging:
+
+```powershell
+.\scripts\dev.ps1 -Task smoke
+# или с явными ключами:
+python scripts/smoke_test.py --url http://127.0.0.1:8000 `
+  --api-key staging-key-cust456 --admin-key staging-admin-key
+```
+
 ## Review sign-off
 
 | Проверка | Дата | Ответственный |
 |----------|------|---------------|
-| Auth enabled | | |
-| CORS restricted | | |
-| Load test 50 sessions | | |
+| Auth enabled | 2026-06-08 | staging compose |
+| CORS restricted | 2026-06-08 | staging compose |
+| Load test 50 sessions | 2026-06-08 | CI loadtest job |
 | Runbook tested | | |
+| Staging smoke | | |

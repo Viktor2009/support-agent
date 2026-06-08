@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-06-08 — Phase 6: Production Hardening (start)
+
+### Added
+- Phase 6 roadmap (Production Hardening)
+- `scripts/smoke_test.py` + `dev.ps1 -Task smoke`
+- `.env.staging.example` for Postgres + Redis + auth staging profile
+- Dependabot (pip + GitHub Actions)
+- CI `audit` job: `pip-audit` on `requirements.txt`
+
+### Changed
+- `docker-compose.staging.yml`: `RATE_LIMIT_PER_MINUTE`, `METRICS_ENABLED`
+- `docs/SECURITY.md`: staging profile checklist + smoke test instructions
+
 ## [1.3.1] — 2026-06-08
 
 ### Changed

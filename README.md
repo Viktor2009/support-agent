@@ -129,7 +129,12 @@ EMBEDDING_MODEL=text-embedding-3-small
 docker compose -f docker-compose.staging.yml up --build
 # API: http://127.0.0.1:8000/docs
 # Header: X-API-Key: staging-key-cust456
+
+# Smoke test (после старта):
+.\scripts\dev.ps1 -Task smoke
 ```
+
+Профиль окружения: `.env.staging.example`
 
 ## Auth (API Key)
 

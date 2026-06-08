@@ -1,6 +1,6 @@
 # Roadmap — Support Agent
 
-> Зафиксирован: 2026-06-08 · Текущая версия API: **1.3.1**
+> Зафиксирован: 2026-06-08 · Текущая версия API: **1.4.0**
 
 ## Цели
 
@@ -160,3 +160,27 @@
 - [x] Hybrid retriever: embedding → keyword fallback
 - [x] `/health` → `rag.mode`, `rag.chunks`
 - [x] Mock embeddings for offline/tests
+
+---
+
+## Фаза 6 — Production Hardening (недели 25–28) `[IN PROGRESS]`
+
+Цель: готовность к pilot-деплою на Postgres + Redis с закрытым security checklist.
+
+- [x] Staging smoke test (`scripts/smoke_test.py`, `dev.ps1 -Task smoke`)
+- [x] Dependabot (pip + GitHub Actions)
+- [x] `pip audit` в CI
+- [x] `.env.staging.example` + hardening в `docker-compose.staging.yml`
+- [x] Security checklist: staging profile
+- [ ] Staging smoke в CI (docker compose job)
+- [ ] Async admin / GDPR endpoints (убрать threadpool)
+- [ ] Redis session store (вместо Postgres-only dialog memory)
+- [ ] WebSocket streaming для chat widget
+- [ ] TLS termination guide (nginx / reverse proxy)
+
+## Sprint 11 — в работе (Production Hardening)
+
+- [x] Фаза 6 roadmap + smoke test script
+- [x] Dependabot + pip audit
+- [x] Staging env template + security checklist update
+- [x] Smoke test verified (local staging env; full Docker — `dev.ps1 -Task staging`)

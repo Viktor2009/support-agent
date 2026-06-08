@@ -6,7 +6,7 @@ def test_health(client):
     assert data["database"] == "ok"
     assert data["checkpointer"] in ("memory", "ok")
     assert data["auth"] == "disabled"
-    assert data["version"] == "1.3.1"
+    assert data["version"] == "1.4.0"
     assert "rag" in data
     assert data["rag"]["chunks"] >= 4
     assert data["database_async"] == "ok"

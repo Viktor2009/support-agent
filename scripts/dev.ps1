@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("install", "test", "lint", "coverage", "run", "migrate", "postgres", "staging", "eval", "loadtest")]
+    [ValidateSet("install", "test", "lint", "coverage", "run", "migrate", "postgres", "staging", "smoke", "eval", "loadtest")]
     [string]$Task = "run"
 )
 
@@ -36,6 +36,12 @@ switch ($Task) {
     }
     "staging" {
         docker compose -f docker-compose.staging.yml up --build
+    }
+    "smoke" {
+        .\.venv\Scripts\python.exe scripts\smoke_test.py `
+            --url http://127.0.0.1:8000 `
+            --api-key staging-key-cust456 `
+            --admin-key staging-admin-key
     }
     "eval" {
         $env:MOCK_LLM = "true"

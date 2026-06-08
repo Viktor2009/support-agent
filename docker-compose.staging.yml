@@ -34,6 +34,8 @@ services:
       CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       REDIS_URL: redis://redis:6379/0
       ADMIN_API_KEY: staging-admin-key
+      RATE_LIMIT_PER_MINUTE: "60"
+      METRICS_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy
